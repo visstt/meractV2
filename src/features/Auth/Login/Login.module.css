@@ -1,0 +1,283 @@
+.login_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-image: url("/images/login_background.png");
+  background-size: cover;
+  background-position: 60% center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.login_wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(70deg, rgba(255, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 40%),
+    radial-gradient(
+      ellipse at 60% 40%,
+      rgba(0, 0, 0, 0.45) 60%,
+      rgba(0, 0, 0, 0) 100%
+    ),
+    linear-gradient(to right, rgba(0, 0, 0, 0) 70%, rgba(20, 20, 30, 0.55) 100%);
+}
+
+.login_wrapper h1 {
+  z-index: 1;
+  color: #fff;
+  font-weight: 600;
+  font-style: Regular;
+  font-size: 30px;
+  margin-bottom: 30px;
+}
+.login_form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  z-index: 1;
+  padding: 37px 19px;
+
+  border-radius: 10px;
+  width: 80%;
+  height: 370px;
+
+  backdrop-filter: blur(38px);
+  box-shadow:
+    inset 0 0 44px 0 rgba(255, 255, 255, 0.11),
+    inset 0 0 40px 0 rgba(117, 177, 255, 0.22);
+  background: rgba(255, 255, 255, 0.13);
+  position: relative;
+  overflow: hidden;
+}
+
+.login_form::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: rgba(30, 40, 60, 0.22);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.input_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.input_wrapper input {
+  border-radius: 4px;
+  padding: 10px;
+  width: 94%;
+  height: 53px;
+  outline: none;
+  border: 1px #141414;
+  backdrop-filter: blur(28px);
+  box-shadow: inset 0 0 14px 0 rgba(231, 246, 255, 0.18);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:active {
+  -webkit-box-shadow:
+    inset 0 0 14px 0 rgba(231, 246, 255, 0.18),
+    0 0 0 1000px rgba(255, 255, 255, 0.15) inset !important;
+  box-shadow:
+    inset 0 0 14px 0 rgba(231, 246, 255, 0.18),
+    0 0 0 1000px rgba(255, 255, 255, 0.15) inset !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  background-clip: padding-box !important;
+  transition: background-color 5000s ease-in-out 0s;
+  border-radius: 4px !important;
+  padding: 10px !important;
+  width: 94% !important;
+  height: 53px !important;
+  outline: none !important;
+  border: 1px #141414 !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-box-shadow: inset 0 0 14px 0 rgba(231, 246, 255, 0.18) !important;
+  box-shadow: inset 0 0 14px 0 rgba(231, 246, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  position: relative !important;
+  z-index: 1 !important;
+  font-size: 14px !important;
+  background-clip: padding-box !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+::placeholder {
+  font-weight: 400;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.checkbox_wrapper {
+  width: 100%;
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+}
+.checkbox_wrapper label {
+  font-weight: 400;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.checkbox_wrapper input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox_wrapper {
+  position: relative;
+}
+
+.checkbox_wrapper label {
+  position: relative;
+  padding-left: 22px;
+  cursor: pointer;
+}
+
+.checkbox_wrapper label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  border: 1px solid #c1c0c3;
+  border-radius: 2px;
+  background-color: #202020;
+  box-sizing: border-box;
+}
+
+.checkbox_wrapper input[type="checkbox"]:checked + label::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  background: #fff;
+  border-radius: 1px;
+}
+a {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: left;
+}
+.login_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+  color: #fff;
+  width: 170px;
+  height: 55px;
+  background: linear-gradient(180deg, #1e90e7 0%, #009cff 100%);
+  border-radius: 8px;
+  border: 2px solid #58d0ff;
+  box-shadow:
+    0 0 12px 2px #58d0ff,
+    0 2px 16px 0 rgba(0, 174, 255, 0.15);
+
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
+  outline: none;
+  position: relative;
+  z-index: 2;
+  padding-top: 4px;
+}
+
+.login_button:hover {
+  background: linear-gradient(180deg, #38b6ff 0%, #009cff 100%);
+  box-shadow:
+    0 0 20px 4px #58d0ff,
+    0 2px 24px 0 rgba(0, 174, 255, 0.25);
+}
+.login_form p {
+  margin-top: 10px;
+  font-weight: 400;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+.login_wrapper p {
+  margin-top: 20px;
+  font-weight: 400;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ico {
+  margin-top: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #3a353a 60%, #2a232a 100%);
+  border: 2px solid #cbeaff;
+  box-shadow: 0 0 16px 0 rgba(203, 234, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+.ico img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px #fff);
+}
+
+@media only screen and (max-width: 600px) and (orientation: portrait) and (-webkit-min-device-pixel-ratio: 2) {
+  .login_form {
+    background: rgba(30, 40, 60, 0.55);
+    backdrop-filter: blur(38px);
+  }
+  .input_wrapper input {
+    background: rgba(30, 40, 60, 0.65);
+    backdrop-filter: blur(38px);
+  }
+}

@@ -1,0 +1,115 @@
+.guildCard::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 110px;
+  width: 100%;
+  height: 50px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 35%,
+    rgba(9, 84, 134, 0.9) 0%,
+    rgba(9, 84, 134, 0.95) 35%,
+    rgba(9, 84, 134, 0.7) 105%,
+    rgba(9, 84, 134, 0.2) 70%,
+    rgba(9, 84, 134, 0) 100%
+  );
+  filter: blur(6px);
+  z-index: 2;
+}
+.guildCard > * {
+  position: relative;
+  z-index: 2;
+}
+.guildCard {
+  position: relative;
+  z-index: 2;
+  margin-top: 20px;
+  border-radius: 10px;
+  height: 410px;
+  border: 1px solid #fff;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image:
+    url(/images/guildCardBg.png),
+    linear-gradient(180deg, rgba(9, 84, 134, 0.45) 0%, rgba(9, 84, 134, 0) 15%),
+    linear-gradient(180deg, #095486 37.4%, rgba(115, 115, 115, 0) 79.9%);
+  background-size: contain, cover, cover;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.link_icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.content {
+  z-index: 5;
+  margin-top: 50px;
+  padding: 20px;
+}
+.name h1 {
+  margin-top: 5px;
+  font-weight: 700;
+  font-size: 22px;
+  text-transform: uppercase;
+}
+.description p {
+  font-weight: 300;
+  font-size: 12px;
+  margin-top: 5px;
+  max-width: 90%;
+}
+.info {
+  margin-top: 10px;
+}
+.info p {
+  font-weight: 500;
+  font-size: 12px;
+  opacity: 0.6;
+}
+.info h2 {
+  font-weight: 400;
+  font-size: 16px;
+}
+.input {
+  margin-top: 10px;
+  outline: none;
+  border: none;
+  padding-left: 5px;
+  border-radius: 4px;
+  width: 292px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.stripe {
+  height: 1px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+.statistic {
+  z-index: 5;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  display: flex;
+  gap: 20px;
+}
+.block {
+  display: flex;
+  flex-direction: column;
+}
+.block p {
+  font-weight: 500;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.block h3 {
+  font-weight: 400;
+  font-size: 16px;
+  color: #fff;
+}

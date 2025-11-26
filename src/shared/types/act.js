@@ -1,0 +1,64 @@
+// Типы данных для Act согласно Prisma схеме
+export const ActType = {
+  SINGLE: "SINGLE",
+  MULTI: "MULTI",
+};
+
+export const ActFormat = {
+  SINGLE: "SINGLE",
+  SEVERAL: "SEVERAL",
+};
+
+export const SelectionMethods = {
+  VOTING: "VOTING",
+  BIDDING: "BIDDING",
+  MANUAL: "MANUAL",
+};
+
+export const ActStatus = {
+  ONLINE: "ONLINE",
+  OFFLINE: "OFFLINE",
+};
+
+// Функция для создания объекта CreateActRequest
+export const createActRequest = (data) => ({
+  title: data.title,
+  sequel: data.sequel || null,
+  type: data.type,
+  format: data.format,
+  heroMethods: data.heroMethods,
+  navigatorMethods: data.navigatorMethods,
+  biddingTime: data.biddingTime,
+  photo: data.photo || null,
+});
+
+// Валидация данных Act
+export const validateActData = (data) => {
+  const errors = [];
+
+  if (!data.title?.trim()) {
+    errors.push("Title is required");
+  }
+
+  if (!Object.values(ActType).includes(data.type)) {
+    errors.push("Invalid act type");
+  }
+
+  if (!Object.values(ActFormat).includes(data.format)) {
+    errors.push("Invalid act format");
+  }
+
+  if (!Object.values(SelectionMethods).includes(data.heroMethods)) {
+    errors.push("Invalid hero selection method");
+  }
+
+  if (!Object.values(SelectionMethods).includes(data.navigatorMethods)) {
+    errors.push("Invalid navigator selection method");
+  }
+
+  if (!data.biddingTime) {
+    errors.push("Bidding time is required");
+  }
+
+  return errors;
+};

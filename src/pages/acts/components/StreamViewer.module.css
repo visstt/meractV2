@@ -1,0 +1,396 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 20px 10px 20px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.backButton {
+  background: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  width: 20px;
+}
+
+.title {
+  color: white;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  flex: 1;
+  padding-left: 40px;
+}
+
+.timer {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.location {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.locationText {
+  color: #ccc;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.rolesNavigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #ccc;
+}
+
+.roleSeparator {
+  margin: 0 8px;
+}
+
+.videoContainer {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.videoElement {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.statusPanel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+  padding: 20px;
+  color: white;
+  font-size: 14px;
+  z-index: 1001;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusLive {
+  background: #4caf50;
+}
+
+.statusOffline {
+  background: #f44336;
+}
+
+.viewersCount {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* Chat Container */
+.chatContainer {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  z-index: 1002;
+}
+
+/* Chat Panel Styles */
+.chatPanel {
+  width: 330px;
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatActions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.actionButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  border: 0.5px solid rgba(212, 235, 255, 0.3);
+}
+
+/* Geo and File buttons - dark gradient */
+.actionButton:nth-child(1),
+.actionButton:nth-child(2) {
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgb(0, 0, 0) 0%,
+    rgb(70, 70, 70) 100%
+  );
+}
+
+/* Chat button - light gradient */
+.actionButton:nth-child(3) {
+  background: linear-gradient(180deg, #fff 0%, #c8c8c8 100%);
+}
+
+.actionButton:hover {
+  transform: scale(1.05);
+}
+
+.actionButton img {
+  width: 24px;
+  height: 24px;
+}
+
+/* Dark buttons (geo, file) should have white icons */
+.actionButton:nth-child(1) img,
+.actionButton:nth-child(2) img {
+  filter: brightness(0) invert(1);
+}
+
+/* Light button (chat) should have dark icons */
+.actionButton:nth-child(3) img {
+  filter: none;
+}
+
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-right: 8px;
+  max-height: calc(100% - 80px);
+}
+
+.chatMessage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.username {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.messageText {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.noMessages {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.chatInput {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  width: 289px;
+  height: 39px;
+  backdrop-filter: blur(34px);
+  box-shadow: inset 0 0 40px 0 rgba(117, 177, 255, 0.3);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 20px;
+  position: relative;
+}
+
+.messageInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  padding: 8px 0;
+  font-family: inherit;
+}
+
+.messageInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.messageInput:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.inputButton {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+}
+
+.inputButton:hover:not(:disabled) {
+  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.inputButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inputButton img {
+  width: 20px;
+  height: 20px;
+}
+
+.mapOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  background: #000;
+}
+
+.closeMapButton {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2001;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s ease;
+}
+
+.closeMapButton:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.closeMapButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Hide Leaflet controls and attribution */
+:global(.leaflet-touch .leaflet-control-attribution),
+:global(.leaflet-touch .leaflet-control-layers),
+:global(.leaflet-touch .leaflet-bar) {
+  display: none !important;
+}
+
+/* Hide Leaflet controls and attribution */
+.mapOverlay :global(.leaflet-touch .leaflet-control-attribution),
+.mapOverlay :global(.leaflet-touch .leaflet-control-layers),
+.mapOverlay :global(.leaflet-touch .leaflet-bar) {
+  display: none !important;
+}

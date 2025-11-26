@@ -1,0 +1,96 @@
+.guildsPage {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+}
+
+.customSelect {
+  position: relative;
+  width: fit-content;
+}
+
+.selectHeader {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  height: 25px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  width: fit-content;
+
+  font-weight: 400;
+  font-size: 14px;
+  color: #fff;
+
+  backdrop-filter: blur(10px);
+  background: rgba(39, 44, 49, 0.8);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  background: rgba(39, 44, 49, 0.9);
+  z-index: 10;
+  overflow: hidden;
+  white-space: nowrap;
+  width: max-content;
+}
+
+.option {
+  text-align: center;
+  padding: 4px 6px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.form {
+  z-index: 2;
+
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.loading {
+  text-align: center;
+  color: #fff;
+  font-size: 18px;
+  margin-top: 40px;
+}
+.recommendations {
+  display: flex;
+  margin-top: 20px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+}
+.recommendations p {
+  font-weight: 400;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 137px;
+}
+.stripeDefault {
+  height: 1px;
+  background-color: #fff;
+  width: 100%;
+}
+.guildCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
