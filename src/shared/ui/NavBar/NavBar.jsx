@@ -65,7 +65,6 @@ export default function NavBar() {
     { label: "Acts", icon: ActIcon, path: "/acts" },
     { label: "Chat", icon: ChatIcon, path: "/chat" },
     { label: "Guilds", icon: GuildIcon, path: "/guilds" },
-    { label: "Achievements", icon: AchievementIcon, path: "/achievements" },
     { label: "Rank", icon: RankIcon, path: "/rank" },
   ];
 
