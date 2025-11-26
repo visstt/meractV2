@@ -63,26 +63,50 @@ class AchievementSocket {
       console.error("🔴 Achievement socket connection error:", error);
     });
 
+    // Слушаем ВСЕ события для отладки
+    this.socket.onAny((eventName, ...args) => {
+      console.log("🔊 Socket event received:", eventName, args);
+    });
+
     // Подписываемся на персональные уведомления
     if (userId) {
-      this.socket.on(`achievement:${userId}`, (data) => {
+      const personalChannel = `achievement:${userId}`;
+      console.log("🎯 Subscribing to personal channel:", personalChannel);
+      this.socket.on(personalChannel, (data) => {
         console.log("🏆 Personal achievement received:", data);
         this.notifyListeners("personal", data);
       });
     }
 
     // Подписываемся на глобальные уведомления
+    console.log("🎯 Subscribing to global channel: achievement:global");
     this.socket.on("achievement:global", (data) => {
       console.log("🌍 Global achievement received:", data);
       this.notifyListeners("global", data);
     });
 
-    // Подписываемся на уведомления стрима (для зрителей)
+    // Подписываемся на уведомления стрима (для зрителей и стримера)
     if (streamId) {
-      this.socket.on(`achievement:stream:${streamId}`, (data) => {
-        console.log("📺 Stream achievement received:", data);
-        // Показываем как глобальное уведомление для зрителей
-        this.notifyListeners("global", data);
+      const streamChannel = `achievement:stream:${streamId}`;
+      console.log("🎯 Subscribing to stream channel:", streamChannel);
+
+      this.socket.on(streamChannel, (data) => {
+        console.log("📺 Stream achievement received:", {
+          data,
+          currentUserId: userId,
+          dataUserId: data.userId,
+          dataUserIdFromUser: data.user?.id,
+        });
+
+        // Если это награждение текущего пользователя, показываем как персональное
+        if (data.userId === userId || data.user?.id === userId) {
+          console.log("🏆 This achievement is for current user");
+          this.notifyListeners("personal", data);
+        } else {
+          // Иначе показываем как глобальное уведомление для зрителей
+          console.log("🌍 This achievement is for another user");
+          this.notifyListeners("global", data);
+        }
       });
     }
   }

@@ -36,15 +36,45 @@ export const useAchievementStore = create((set, get) => ({
 
   // Управление уведомлениями
   addNotification: (notification) => {
+    console.log("🔔 achievementStore.addNotification called:", notification);
+
     const newNotification = {
       id: Date.now(),
       timestamp: new Date().toISOString(),
       ...notification,
     };
 
-    set((state) => ({
-      notifications: [...state.notifications, newNotification],
-    }));
+    set((state) => {
+      console.log(
+        "📊 Current notifications count:",
+        state.notifications.length,
+      );
+
+      // Если это персональное уведомление, добавляем достижение в список пользователя
+      if (notification.type === "personal" && notification.achievement) {
+        const achievementExists = state.userAchievements.some(
+          (a) => a.id === notification.achievement.id,
+        );
+
+        if (!achievementExists) {
+          console.log("➕ Adding personal achievement to user achievements");
+          return {
+            notifications: [...state.notifications, newNotification],
+            userAchievements: [
+              ...state.userAchievements,
+              notification.achievement,
+            ],
+          };
+        } else {
+          console.log("⚠️ Achievement already exists in user achievements");
+        }
+      }
+
+      console.log("➕ Adding notification to list");
+      return {
+        notifications: [...state.notifications, newNotification],
+      };
+    });
 
     return newNotification.id;
   },
