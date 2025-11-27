@@ -96,10 +96,11 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     baseUserId = 888888; // Fixed fallback for anonymous users
   }
 
-  // Create unique UID for viewer: streamId + userId + role
+  // Create unique UID for viewer: использую комбинацию для уникальности
   const streamId =
     channelName?.replace("act_", "") || streamData?.id || "default";
-  const userId = parseInt(`${streamId}${baseUserId}1`); // streamId + userId + role(1=subscriber)
+  // Формула: (streamId * 1000000) + (baseUserId * 10) + role
+  const userId = parseInt(streamId) * 1000000 + baseUserId * 10 + 1;
 
   console.log(
     "StreamViewer user data:",
@@ -109,6 +110,94 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     "userId:",
     userId,
   );
+
+  // Яркий лог для проверки UID
+  console.log(
+    "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "color: #00BFFF; font-weight: bold; font-size: 14px;",
+  );
+  console.log(
+    "%c👁️ STREAM VIEWER UID GENERATED",
+    "color: #00BFFF; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+  );
+  console.log(
+    "%cStreamID: %c" +
+      streamId +
+      "%c | BaseUserID: %c" +
+      baseUserId +
+      "%c | Role: %c1 (SUBSCRIBER)",
+    "color: #00BFFF; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "color: #00BFFF; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "color: #00BFFF; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+  );
+  console.log(
+    "%c>>> FINAL UID: %c" + userId,
+    "color: #00BFFF; font-weight: bold; font-size: 16px;",
+    "color: #FF00FF; font-weight: bold; font-size: 24px; text-shadow: 0 0 10px #FF00FF;",
+  );
+  console.log(
+    "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "color: #00BFFF; font-weight: bold; font-size: 14px;",
+  );
+
+  // Сохраняем UID для проверки конфликтов (с меткой времени для отладки)
+  window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
+  const currentTime = Date.now();
+  const uidKey = `${userId}_viewer`;
+
+  // Проверяем реальные конфликты (UID используется другим активным соединением)
+  const hasRealConflict = Object.keys(window.__STREAM_UIDS__).some((key) => {
+    const [storedUid, role] = key.split("_");
+    // Конфликт только если это точно такой же UID и прошло больше 1 секунды
+    return (
+      storedUid === String(userId) &&
+      currentTime - window.__STREAM_UIDS__[key] > 1000
+    );
+  });
+
+  if (hasRealConflict) {
+    console.log(
+      "%c╔═══════════════════════════════════════════════════════════════╗",
+      "color: #FF0000; font-weight: bold; font-size: 16px;",
+    );
+    console.log(
+      "%c║                    ⚠️  UID CONFLICT DETECTED! ⚠️                ║",
+      "color: #FF0000; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    );
+    console.log(
+      "%c║  This UID already exists: " +
+        userId +
+        "                              ║",
+      "color: #FF0000; font-weight: bold; font-size: 18px;",
+    );
+    console.log(
+      "%c╚═══════════════════════════════════════════════════════════════╝",
+      "color: #FF0000; font-weight: bold; font-size: 16px;",
+    );
+  } else {
+    window.__STREAM_UIDS__[uidKey] = currentTime;
+    console.log(
+      "%c╔═══════════════════════════════════════════════════════════════╗",
+      "color: #00FF00; font-weight: bold; font-size: 16px;",
+    );
+    console.log(
+      "%c║                    ✅  UID IS UNIQUE! ✅                        ║",
+      "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    );
+    console.log(
+      "%c║  No conflicts found for UID: " +
+        userId +
+        "                          ║",
+      "color: #00FF00; font-weight: bold; font-size: 18px;",
+    );
+    console.log(
+      "%c╚═══════════════════════════════════════════════════════════════╝",
+      "color: #00FF00; font-weight: bold; font-size: 16px;",
+    );
+  }
 
   // Use passed channelName or create from streamData
   const actualChannelName = channelName?.startsWith("act_")

@@ -63,10 +63,11 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
     baseUserId = 999999; // Fixed fallback
   }
 
-  // Create unique UID for streamer: actId + userId + role
+  // Create unique UID for streamer: использую комбинацию для уникальности
+  // Формула: (actId * 1000000) + (baseUserId * 10) + role
   const userId = actId
-    ? parseInt(`${actId}${baseUserId}2`)
-    : parseInt(`${Date.now()}${baseUserId}2`); // actId + userId + role(2=publisher)
+    ? parseInt(actId) * 1000000 + baseUserId * 10 + 2
+    : Math.floor(Date.now() / 1000) * 1000000 + baseUserId * 10 + 2;
 
   console.log(
     "StreamHost user data:",
@@ -79,6 +80,95 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
     actId,
   );
 
+  // Яркий лог для проверки UID
+  console.log(
+    "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "color: #FFD700; font-weight: bold; font-size: 14px;",
+  );
+  console.log(
+    "%c🎥 STREAM HOST UID GENERATED",
+    "color: #FFD700; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+  );
+  console.log(
+    "%cActID: %c" +
+      actId +
+      "%c | BaseUserID: %c" +
+      baseUserId +
+      "%c | Role: %c2 (PUBLISHER)",
+    "color: #FFD700; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "color: #FFD700; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "color: #FFD700; font-weight: bold;",
+    "color: #00FF00; font-weight: bold; font-size: 16px;",
+  );
+  console.log(
+    "%c>>> FINAL UID: %c" + userId,
+    "color: #FFD700; font-weight: bold; font-size: 16px;",
+    "color: #FF00FF; font-weight: bold; font-size: 24px; text-shadow: 0 0 10px #FF00FF;",
+  );
+  console.log(
+    "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "color: #FFD700; font-weight: bold; font-size: 14px;",
+  );
+
+  // Сохраняем UID для проверки конфликтов (с меткой времени для отладки)
+  window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
+  const currentTime = Date.now();
+  const uidKey = `${userId}_host`;
+
+  // Проверяем реальные конфликты (UID используется другим активным соединением)
+  // Конфликт только если UID уже существует И прошло больше 2 секунд (не React Strict Mode)
+  const existingEntry = window.__STREAM_UIDS__[uidKey];
+  const hasRealConflict = existingEntry && currentTime - existingEntry > 2000;
+
+  if (hasRealConflict) {
+    console.log(
+      "%c╔═══════════════════════════════════════════════════════════════╗",
+      "color: #FF0000; font-weight: bold; font-size: 16px;",
+    );
+    console.log(
+      "%c║                    ⚠️  UID CONFLICT DETECTED! ⚠️                ║",
+      "color: #FF0000; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    );
+    console.log(
+      "%c║  This UID already exists: " +
+        userId +
+        "                              ║",
+      "color: #FF0000; font-weight: bold; font-size: 18px;",
+    );
+    console.log(
+      "%c║  Time since last use: " +
+        (currentTime - existingEntry) +
+        "ms                     ║",
+      "color: #FF0000; font-weight: bold; font-size: 16px;",
+    );
+    console.log(
+      "%c╚═══════════════════════════════════════════════════════════════╝",
+      "color: #FF0000; font-weight: bold; font-size: 16px;",
+    );
+  } else {
+    window.__STREAM_UIDS__[uidKey] = currentTime;
+    console.log(
+      "%c╔═══════════════════════════════════════════════════════════════╗",
+      "color: #00FF00; font-weight: bold; font-size: 16px;",
+    );
+    console.log(
+      "%c║                    ✅  UID IS UNIQUE! ✅                        ║",
+      "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    );
+    console.log(
+      "%c║  No conflicts found for UID: " +
+        userId +
+        "                          ║",
+      "color: #00FF00; font-weight: bold; font-size: 18px;",
+    );
+    console.log(
+      "%c╚═══════════════════════════════════════════════════════════════╝",
+      "color: #00FF00; font-weight: bold; font-size: 16px;",
+    );
+  }
+
   // Generate channel ID based on actId
   const channelName = actId ? `act_${actId}` : `temp_${Date.now()}`;
 
@@ -86,8 +176,18 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
     document.body.classList.add("no-overlay");
     return () => {
       document.body.classList.remove("no-overlay");
+
+      // Clear UID when component unmounts
+      const uidKey = `${userId}_host`;
+      if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
+        delete window.__STREAM_UIDS__[uidKey];
+        console.log(
+          "%c🗑️ UID cleared on unmount: " + userId,
+          "color: #FFA500; font-weight: bold;",
+        );
+      }
     };
-  }, []);
+  }, [userId]);
 
   // Fetch act data to get intro/outro
   useEffect(() => {
@@ -122,6 +222,15 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
       // Prevent multiple initialization
       if (isInitializingRef.current) {
         console.log("Already initializing, skipping...");
+        return;
+      }
+
+      // Check for UID conflict BEFORE starting stream
+      if (hasRealConflict) {
+        console.error("Cannot start stream: UID conflict detected!");
+        setError(
+          `UID conflict detected (${userId}). Please refresh the page and try again.`,
+        );
         return;
       }
 
@@ -571,6 +680,16 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
       // Leave channel
       if (clientRef.current) {
         await clientRef.current.leave();
+      }
+
+      // Clear UID from conflict detection
+      const uidKey = `${userId}_host`;
+      if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
+        delete window.__STREAM_UIDS__[uidKey];
+        console.log(
+          "%c🗑️ UID cleared from conflict detection: " + userId,
+          "color: #FFA500; font-weight: bold;",
+        );
       }
 
       // Clear references
