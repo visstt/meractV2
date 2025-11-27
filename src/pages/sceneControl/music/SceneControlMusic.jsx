@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useSequelStore } from "../../../shared/stores/sequelStore";
 import styles from "../SceneControl.module.css";
@@ -87,7 +88,16 @@ export default function SceneControlMusic() {
 
   const handleMusicSelect = (track) => {
     // Добавляем или удаляем трек из выбранных
+    const isCurrentlySelected = selectedMusic.some((m) => m.id === track.id);
     toggleSelectedMusic(track);
+
+    // Показываем уведомление
+    if (isCurrentlySelected) {
+      toast.info("Music removed from selection");
+    } else {
+      toast.success("Music added successfully!");
+    }
+
     console.log("Toggled music:", track);
   };
 

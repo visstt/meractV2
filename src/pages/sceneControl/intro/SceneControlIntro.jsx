@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useSequelStore } from "../../../shared/stores/sequelStore";
 import styles from "../SceneControl.module.css";
@@ -9,8 +10,9 @@ import { useUploadIntro } from "./hooks/useUploadIntro";
 
 export default function SceneControlMusic() {
   const [heroMethod, setHeroMethod] = useState("Intro");
-  const [selectedIntro, setSelectedIntro] = useState(null);
-  const { setSelectedIntro: setIntroInStore } = useSequelStore();
+  const { selectedIntro: introFromStore, setSelectedIntro: setIntroInStore } =
+    useSequelStore();
+  const [selectedIntro, setSelectedIntro] = useState(introFromStore);
   const { intros, loading, error, refetch } = useIntros();
   const {
     uploadIntro,
@@ -55,21 +57,30 @@ export default function SceneControlMusic() {
     setSelectedIntro(intro);
     // Сохраняем выбранное intro в стор
     setIntroInStore(intro);
+    // Показываем уведомление
+    toast.success("Intro selected successfully!");
   };
+
+  // Синхронизируем локальный стейт со store при монтировании
+  useEffect(() => {
+    if (introFromStore) {
+      setSelectedIntro(introFromStore);
+    }
+  }, [introFromStore]);
 
   // Автоматический выбор первого интро (если есть). Если интро нет, ничего не делаем.
   useEffect(() => {
     // Если ещё идёт загрузка или есть ошибка - не выбираем
     if (loading || error) return;
-    // Нет интро или уже есть выбранное - выходим
-    if (!Array.isArray(intros) || intros.length === 0 || selectedIntro) return;
+    // Нет интро или уже есть выбранное в store - выходим
+    if (!Array.isArray(intros) || intros.length === 0 || introFromStore) return;
 
     const firstIntro = intros[0];
     if (firstIntro) {
       setSelectedIntro(firstIntro);
       setIntroInStore(firstIntro);
     }
-  }, [intros, loading, error, selectedIntro, setIntroInStore]);
+  }, [intros, loading, error, introFromStore, setIntroInStore]);
   return (
     <div>
       <div className={styles.glass}>

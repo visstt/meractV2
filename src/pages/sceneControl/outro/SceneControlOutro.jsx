@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useSequelStore } from "../../../shared/stores/sequelStore";
 import styles from "../SceneControl.module.css";
@@ -9,8 +10,9 @@ import { useUploadOutro } from "./hooks/useUploadOutro";
 
 export default function SceneControlOutro() {
   const [heroMethod, setHeroMethod] = useState("Outro");
-  const [selectedOutro, setSelectedOutro] = useState(null);
-  const { setSelectedOutro: setOutroInStore } = useSequelStore();
+  const { selectedOutro: outroFromStore, setSelectedOutro: setOutroInStore } =
+    useSequelStore();
+  const [selectedOutro, setSelectedOutro] = useState(outroFromStore);
   const { outros, loading, error, refetch } = useOutros();
   const {
     uploadOutro,
@@ -55,17 +57,26 @@ export default function SceneControlOutro() {
     setSelectedOutro(outro);
     // Сохраняем выбранное outro в стор
     setOutroInStore(outro);
+    // Показываем уведомление
+    toast.success("Outro selected successfully!");
   };
+
+  // Синхронизируем локальный стейт со store при монтировании
+  useEffect(() => {
+    if (outroFromStore) {
+      setSelectedOutro(outroFromStore);
+    }
+  }, [outroFromStore]);
 
   // Автоматически выбираем первое outro после загрузки
   useEffect(() => {
-    if (!loading && !error && outros.length > 0 && !selectedOutro) {
+    if (!loading && !error && outros.length > 0 && !outroFromStore) {
       const firstOutro = outros[0];
       setSelectedOutro(firstOutro);
       // Сохраняем в стор
       setOutroInStore(firstOutro);
     }
-  }, [outros, loading, error, selectedOutro, setOutroInStore]);
+  }, [outros, loading, error, outroFromStore, setOutroInStore]);
 
   return (
     <div>
