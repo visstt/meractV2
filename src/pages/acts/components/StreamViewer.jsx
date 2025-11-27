@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
 import L from "leaflet";
@@ -86,118 +86,60 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const { user } = useAuthStore();
 
   // Extract user ID (use user.id first, then from token)
-  let baseUserId;
-  if (user?.id) {
-    baseUserId = user.id;
-  } else if (user?.token) {
-    const tokenData = parseJWT(user.token);
-    baseUserId = tokenData?.sub || tokenData?.id || 888888;
-  } else {
-    baseUserId = 888888; // Fixed fallback for anonymous users
-  }
+  const baseUserId = useMemo(() => {
+    if (user?.id) {
+      return user.id;
+    } else if (user?.token) {
+      const tokenData = parseJWT(user.token);
+      return tokenData?.sub || tokenData?.id || 888888;
+    }
+    return 888888; // Fixed fallback for anonymous users
+  }, [user]);
 
-  // Create unique UID for viewer: использую комбинацию для уникальности
-  const streamId =
-    channelName?.replace("act_", "") || streamData?.id || "default";
-  // Формула: (streamId * 1000000) + (baseUserId * 10) + role
-  const userId = parseInt(streamId) * 1000000 + baseUserId * 10 + 1;
+  // Extract stream ID
+  const streamId = useMemo(() => {
+    return channelName?.replace("act_", "") || streamData?.id || "default";
+  }, [channelName, streamData]);
 
-  console.log(
-    "StreamViewer user data:",
-    user,
-    "baseUserId:",
-    baseUserId,
-    "userId:",
-    userId,
-  );
+  // Create UNIQUE UID for viewer - генерируется только один раз при монтировании
+  // Формула: (streamId * 1000000) + (baseUserId * 100) + randomComponent
+  const userId = useMemo(() => {
+    const randomComponent = Math.floor(Math.random() * 100); // 0-99
+    const uid =
+      parseInt(streamId) * 1000000 + baseUserId * 100 + randomComponent;
 
-  // Яркий лог для проверки UID
+    // Сохраняем UID сразу после генерации
+    window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
+    window.__STREAM_UIDS__[`${uid}_viewer`] = Date.now();
+
+    return uid;
+  }, [streamId, baseUserId]);
+
   console.log(
     "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "color: #00BFFF; font-weight: bold; font-size: 14px;",
   );
   console.log(
-    "%c👁️ STREAM VIEWER UID GENERATED",
-    "color: #00BFFF; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    "%c👁️ STREAM VIEWER - UNIQUE UID GENERATED (useMemo)",
+    "color: #00BFFF; font-weight: bold; font-size: 18px; background: #000; padding: 10px;",
   );
   console.log(
-    "%cStreamID: %c" +
-      streamId +
-      "%c | BaseUserID: %c" +
-      baseUserId +
-      "%c | Role: %c1 (SUBSCRIBER)",
-    "color: #00BFFF; font-weight: bold;",
-    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "%cStreamID: %c" + streamId + "%c | BaseUserID: %c" + baseUserId,
     "color: #00BFFF; font-weight: bold;",
     "color: #00FF00; font-weight: bold; font-size: 16px;",
     "color: #00BFFF; font-weight: bold;",
     "color: #00FF00; font-weight: bold; font-size: 16px;",
   );
   console.log(
-    "%c>>> FINAL UID: %c" + userId,
+    "%c>>> UNIQUE UID: %c" + userId + " %c(with random component)",
     "color: #00BFFF; font-weight: bold; font-size: 16px;",
     "color: #FF00FF; font-weight: bold; font-size: 24px; text-shadow: 0 0 10px #FF00FF;",
+    "color: #00FFFF; font-weight: bold; font-size: 14px;",
   );
   console.log(
     "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "color: #00BFFF; font-weight: bold; font-size: 14px;",
   );
-
-  // Сохраняем UID для проверки конфликтов (с меткой времени для отладки)
-  window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
-  const currentTime = Date.now();
-  const uidKey = `${userId}_viewer`;
-
-  // Проверяем реальные конфликты (UID используется другим активным соединением)
-  const hasRealConflict = Object.keys(window.__STREAM_UIDS__).some((key) => {
-    const [storedUid, role] = key.split("_");
-    // Конфликт только если это точно такой же UID и прошло больше 1 секунды
-    return (
-      storedUid === String(userId) &&
-      currentTime - window.__STREAM_UIDS__[key] > 1000
-    );
-  });
-
-  if (hasRealConflict) {
-    console.log(
-      "%c╔═══════════════════════════════════════════════════════════════╗",
-      "color: #FF0000; font-weight: bold; font-size: 16px;",
-    );
-    console.log(
-      "%c║                    ⚠️  UID CONFLICT DETECTED! ⚠️                ║",
-      "color: #FF0000; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
-    );
-    console.log(
-      "%c║  This UID already exists: " +
-        userId +
-        "                              ║",
-      "color: #FF0000; font-weight: bold; font-size: 18px;",
-    );
-    console.log(
-      "%c╚═══════════════════════════════════════════════════════════════╝",
-      "color: #FF0000; font-weight: bold; font-size: 16px;",
-    );
-  } else {
-    window.__STREAM_UIDS__[uidKey] = currentTime;
-    console.log(
-      "%c╔═══════════════════════════════════════════════════════════════╗",
-      "color: #00FF00; font-weight: bold; font-size: 16px;",
-    );
-    console.log(
-      "%c║                    ✅  UID IS UNIQUE! ✅                        ║",
-      "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
-    );
-    console.log(
-      "%c║  No conflicts found for UID: " +
-        userId +
-        "                          ║",
-      "color: #00FF00; font-weight: bold; font-size: 18px;",
-    );
-    console.log(
-      "%c╚═══════════════════════════════════════════════════════════════╝",
-      "color: #00FF00; font-weight: bold; font-size: 16px;",
-    );
-  }
 
   // Use passed channelName or create from streamData
   const actualChannelName = channelName?.startsWith("act_")
@@ -374,6 +316,16 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       // Leave channel
       if (clientRef.current) {
         await clientRef.current.leave();
+      }
+
+      // Clear UID from conflict detection
+      const uidKey = `${userId}_viewer`;
+      if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
+        delete window.__STREAM_UIDS__[uidKey];
+        console.log(
+          "%c🗑️ UID cleared from viewer: " + userId,
+          "color: #FFA500; font-weight: bold;",
+        );
       }
 
       // Clear references

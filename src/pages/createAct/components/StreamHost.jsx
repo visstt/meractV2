@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
 
@@ -53,121 +53,59 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
   const { user } = useAuthStore();
 
   // Extract user ID (use user.id first, then from token)
-  let baseUserId;
-  if (user?.id) {
-    baseUserId = user.id;
-  } else if (user?.token) {
-    const tokenData = parseJWT(user.token);
-    baseUserId = tokenData?.sub || tokenData?.id || 999999;
-  } else {
-    baseUserId = 999999; // Fixed fallback
-  }
+  const baseUserId = useMemo(() => {
+    if (user?.id) {
+      return user.id;
+    } else if (user?.token) {
+      const tokenData = parseJWT(user.token);
+      return tokenData?.sub || tokenData?.id || 999999;
+    }
+    return 999999; // Fixed fallback
+  }, [user]);
 
-  // Create unique UID for streamer: использую комбинацию для уникальности
-  // Формула: (actId * 1000000) + (baseUserId * 10) + role
-  const userId = actId
-    ? parseInt(actId) * 1000000 + baseUserId * 10 + 2
-    : Math.floor(Date.now() / 1000) * 1000000 + baseUserId * 10 + 2;
+  // Create UNIQUE UID for streamer - генерируется только один раз при монтировании
+  // Формула: (actId * 1000000) + (baseUserId * 10) + randomComponent + role
+  // randomComponent гарантирует уникальность при каждом запуске
+  const userId = useMemo(() => {
+    const randomComponent = Math.floor(Math.random() * 100); // 0-99
+    const uid = actId
+      ? parseInt(actId) * 1000000 + baseUserId * 100 + randomComponent
+      : Math.floor(Date.now() / 1000) * 1000000 +
+        baseUserId * 100 +
+        randomComponent;
 
-  console.log(
-    "StreamHost user data:",
-    user,
-    "baseUserId:",
-    baseUserId,
-    "userId:",
-    userId,
-    "actId:",
-    actId,
-  );
+    // Сохраняем UID сразу после генерации
+    window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
+    window.__STREAM_UIDS__[`${uid}_host`] = Date.now();
 
-  // Яркий лог для проверки UID
+    return uid;
+  }, [actId, baseUserId]);
+
   console.log(
     "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "color: #FFD700; font-weight: bold; font-size: 14px;",
   );
   console.log(
-    "%c🎥 STREAM HOST UID GENERATED",
-    "color: #FFD700; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+    "%c🎥 STREAM HOST - UNIQUE UID GENERATED (useMemo)",
+    "color: #FFD700; font-weight: bold; font-size: 18px; background: #000; padding: 10px;",
   );
   console.log(
-    "%cActID: %c" +
-      actId +
-      "%c | BaseUserID: %c" +
-      baseUserId +
-      "%c | Role: %c2 (PUBLISHER)",
-    "color: #FFD700; font-weight: bold;",
-    "color: #00FF00; font-weight: bold; font-size: 16px;",
+    "%cActID: %c" + actId + "%c | BaseUserID: %c" + baseUserId,
     "color: #FFD700; font-weight: bold;",
     "color: #00FF00; font-weight: bold; font-size: 16px;",
     "color: #FFD700; font-weight: bold;",
     "color: #00FF00; font-weight: bold; font-size: 16px;",
   );
   console.log(
-    "%c>>> FINAL UID: %c" + userId,
+    "%c>>> UNIQUE UID: %c" + userId + " %c(with random component)",
     "color: #FFD700; font-weight: bold; font-size: 16px;",
     "color: #FF00FF; font-weight: bold; font-size: 24px; text-shadow: 0 0 10px #FF00FF;",
+    "color: #00FFFF; font-weight: bold; font-size: 14px;",
   );
   console.log(
     "%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
     "color: #FFD700; font-weight: bold; font-size: 14px;",
   );
-
-  // Сохраняем UID для проверки конфликтов (с меткой времени для отладки)
-  window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
-  const currentTime = Date.now();
-  const uidKey = `${userId}_host`;
-
-  // Проверяем реальные конфликты (UID используется другим активным соединением)
-  // Конфликт только если UID уже существует И прошло больше 2 секунд (не React Strict Mode)
-  const existingEntry = window.__STREAM_UIDS__[uidKey];
-  const hasRealConflict = existingEntry && currentTime - existingEntry > 2000;
-
-  if (hasRealConflict) {
-    console.log(
-      "%c╔═══════════════════════════════════════════════════════════════╗",
-      "color: #FF0000; font-weight: bold; font-size: 16px;",
-    );
-    console.log(
-      "%c║                    ⚠️  UID CONFLICT DETECTED! ⚠️                ║",
-      "color: #FF0000; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
-    );
-    console.log(
-      "%c║  This UID already exists: " +
-        userId +
-        "                              ║",
-      "color: #FF0000; font-weight: bold; font-size: 18px;",
-    );
-    console.log(
-      "%c║  Time since last use: " +
-        (currentTime - existingEntry) +
-        "ms                     ║",
-      "color: #FF0000; font-weight: bold; font-size: 16px;",
-    );
-    console.log(
-      "%c╚═══════════════════════════════════════════════════════════════╝",
-      "color: #FF0000; font-weight: bold; font-size: 16px;",
-    );
-  } else {
-    window.__STREAM_UIDS__[uidKey] = currentTime;
-    console.log(
-      "%c╔═══════════════════════════════════════════════════════════════╗",
-      "color: #00FF00; font-weight: bold; font-size: 16px;",
-    );
-    console.log(
-      "%c║                    ✅  UID IS UNIQUE! ✅                        ║",
-      "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
-    );
-    console.log(
-      "%c║  No conflicts found for UID: " +
-        userId +
-        "                          ║",
-      "color: #00FF00; font-weight: bold; font-size: 18px;",
-    );
-    console.log(
-      "%c╚═══════════════════════════════════════════════════════════════╝",
-      "color: #00FF00; font-weight: bold; font-size: 16px;",
-    );
-  }
 
   // Generate channel ID based on actId
   const channelName = actId ? `act_${actId}` : `temp_${Date.now()}`;
@@ -225,14 +163,24 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
         return;
       }
 
-      // Check for UID conflict BEFORE starting stream
-      if (hasRealConflict) {
-        console.error("Cannot start stream: UID conflict detected!");
-        setError(
-          `UID conflict detected (${userId}). Please refresh the page and try again.`,
-        );
-        return;
-      }
+      console.log(
+        "%c╔═══════════════════════════════════════════════════════════════╗",
+        "color: #00FF00; font-weight: bold; font-size: 16px;",
+      );
+      console.log(
+        "%c║              ✅  STARTING STREAM WITH UNIQUE UID ✅             ║",
+        "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
+      );
+      console.log(
+        "%c║  UID: " +
+          userId +
+          "                                             ║",
+        "color: #00FF00; font-weight: bold; font-size: 16px;",
+      );
+      console.log(
+        "%c╚═══════════════════════════════════════════════════════════════╝",
+        "color: #00FF00; font-weight: bold; font-size: 16px;",
+      );
 
       isInitializingRef.current = true;
 
