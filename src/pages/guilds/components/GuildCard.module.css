@@ -34,8 +34,9 @@
     url(/images/guildCardBg.png),
     linear-gradient(180deg, rgba(9, 84, 134, 0.45) 0%, rgba(9, 84, 134, 0) 15%),
     linear-gradient(180deg, #095486 37.4%, rgba(115, 115, 115, 0) 79.9%);
-  background-size: contain, cover, cover;
+  background-size: cover, cover, cover;
   background-repeat: no-repeat, no-repeat, no-repeat;
+  background-position: center, center, center;
   color: #fff;
   cursor: pointer;
   transition:

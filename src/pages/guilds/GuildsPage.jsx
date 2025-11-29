@@ -2,11 +2,15 @@ import CustomSelect from "../../shared/ui/CustomSelect";
 import NavBar from "../../shared/ui/NavBar/NavBar";
 import styles from "./GuildsPage.module.css";
 import GuildCard from "./components/GuildCard";
+import { useUserGuild } from "./hooks/useUserGuild";
 
 export default function GuildsPage() {
+  const { guild, loading, error } = useUserGuild();
+
   const handleSortChange = (option) => {
     console.log("Selected sort option:", option);
   };
+
   return (
     <div>
       <div className="header">
@@ -64,14 +68,17 @@ export default function GuildsPage() {
 
         <div className={styles.recommendations}>
           <div className={styles.stripeDefault}></div>
-          <p>Recommended for You</p>
+          <p>Your Guild</p>
           <div className={styles.stripeDefault}></div>
         </div>
 
         <div className={styles.guildCards}>
-          <GuildCard />
-          <GuildCard />
-          <GuildCard />
+          {loading && <p>Loading...</p>}
+          {error && <p>Error: {error}</p>}
+          {!loading && !error && guild && <GuildCard guild={guild} />}
+          {!loading && !error && !guild && (
+            <p>You are not a member of any guild</p>
+          )}
         </div>
       </div>
       <NavBar />

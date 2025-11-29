@@ -1,8 +1,13 @@
 import styles from "./GuildCard.module.css";
 
-export default function GuildCard() {
+export default function GuildCard({ guild }) {
   return (
-    <div className={styles.guildCard}>
+    <div
+      className={styles.guildCard}
+      style={{
+        backgroundImage: `url(${guild.logoFileName || "/images/guildCardBg.png"}), linear-gradient(180deg, rgba(9, 84, 134, 0.45) 0%, rgba(9, 84, 134, 0) 15%), linear-gradient(180deg, #095486 37.4%, rgba(115, 115, 115, 0) 79.9%)`,
+      }}
+    >
       <img
         src="/icons/link_icon.svg"
         alt="link_icon"
@@ -11,17 +16,14 @@ export default function GuildCard() {
       <div className={styles.content}>
         <img
           src="/icons/guild/light.svg"
-          alt="light"
+          alt="guild logo"
           className={styles.light}
         />
         <div className={styles.name}>
-          <h1>Guild Name</h1>
+          <h1>{guild.name}</h1>
         </div>
         <div className={styles.description}>
-          <p>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ex illo
-            fugiat reiciendis culpa
-          </p>
+          <p>{guild.description || "No description available"}</p>
         </div>
         <div className={styles.info}>
           <p>Guild Acts</p>
@@ -37,7 +39,7 @@ export default function GuildCard() {
       <div className={styles.statistic}>
         <div className={styles.block}>
           <p>Member</p>
-          <h3>1,600</h3>
+          <h3>{guild.members?.length || 0}</h3>
         </div>
         <div className={styles.block}>
           <p>Prospects</p>
