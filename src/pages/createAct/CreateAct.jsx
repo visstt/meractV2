@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { MdDelete } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+import api from "../../shared/api/api";
 import { useAuthStore } from "../../shared/stores/authStore";
 import { useSequelStore } from "../../shared/stores/sequelStore";
 import { ActFormat, ActType, SelectionMethods } from "../../shared/types/act";
@@ -36,6 +38,12 @@ export default function CreateAct() {
   // Состояние для созданного act
   const [createdAct, setCreatedAct] = useState(null);
   const [showStream, setShowStream] = useState(false);
+
+  // Состояние для модального окна задач
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
@@ -95,6 +103,183 @@ export default function CreateAct() {
     }
     return new File([u8arr], fileName, { type: mime });
   }, []);
+
+  // Функции для работы с задачами
+  const openTasksModal = async () => {
+    console.log("openTasksModal called, createdAct:", createdAct);
+    setIsTasksModalOpen(true);
+
+    // Если акт уже создан, загружаем задачи с сервера
+    if (createdAct?.id) {
+      await fetchTasks();
+    }
+  };
+
+  const closeTasksModal = () => {
+    setIsTasksModalOpen(false);
+    setNewTaskTitle("");
+  };
+
+  const fetchTasks = async () => {
+    if (!createdAct?.id) return;
+
+    try {
+      setLoadingTasks(true);
+      const response = await api.get(`/act/${createdAct.id}/tasks`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast.error("Failed to load tasks");
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const createTask = async () => {
+    if (!newTaskTitle.trim()) {
+      toast.error("Task title cannot be empty");
+      return;
+    }
+
+    // Если акт еще не создан, добавляем задачу локально
+    if (!createdAct?.id) {
+      const localTask = {
+        id: `temp-${Date.now()}`,
+        title: newTaskTitle,
+        isCompleted: false,
+        createdAt: new Date().toISOString(),
+        local: true, // флаг для отличия локальных задач
+      };
+      setTasks([...tasks, localTask]);
+      setNewTaskTitle("");
+      toast.success("Task added (will be saved when act is created)");
+      return;
+    }
+
+    // Если акт создан, отправляем на сервер
+    try {
+      const response = await api.post(`/act/${createdAct.id}/tasks`, {
+        title: newTaskTitle,
+      });
+      setTasks([...tasks, response.data]);
+      setNewTaskTitle("");
+      toast.success("Task created successfully");
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
+    }
+  };
+
+  const toggleTaskCompletion = async (taskId, currentStatus) => {
+    // Если задача локальная (не сохранена на сервере), обновляем локально
+    const task = tasks.find((t) => t.id === taskId);
+    if (task?.local) {
+      setTasks(
+        tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                isCompleted: !currentStatus,
+                completedAt: !currentStatus ? new Date().toISOString() : null,
+              }
+            : t,
+        ),
+      );
+      toast.success(!currentStatus ? "Task completed!" : "Task reopened");
+      return;
+    }
+
+    if (!createdAct?.id) return;
+
+    try {
+      const response = await api.patch(
+        `/act/${createdAct.id}/tasks/${taskId}`,
+        {
+          isCompleted: !currentStatus,
+        },
+      );
+      setTasks(
+        tasks.map((task) => (task.id === taskId ? response.data : task)),
+      );
+      toast.success(
+        response.data.isCompleted ? "Task completed!" : "Task reopened",
+      );
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast.error("Failed to update task");
+    }
+  };
+
+  const deleteTask = async (taskId) => {
+    // Если задача локальная, просто удаляем из состояния
+    const task = tasks.find((t) => t.id === taskId);
+    if (task?.local) {
+      setTasks(tasks.filter((task) => task.id !== taskId));
+      toast.success("Task deleted");
+      return;
+    }
+
+    if (!createdAct?.id) return;
+
+    try {
+      await api.delete(`/act/${createdAct.id}/tasks/${taskId}`);
+      setTasks(tasks.filter((task) => task.id !== taskId));
+      toast.success("Task deleted");
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
+    }
+  };
+
+  // Сохранение локальных задач на сервер после создания акта
+  const saveLocalTasksToServer = async (actId) => {
+    const localTasks = tasks.filter((task) => task.local);
+
+    if (localTasks.length === 0) {
+      console.log("No local tasks to save");
+      return;
+    }
+
+    console.log("Saving local tasks to server:", localTasks);
+    console.log("Act ID:", actId);
+
+    try {
+      // Сохраняем каждую локальную задачу на сервер
+      const savedTasks = await Promise.all(
+        localTasks.map(async (task) => {
+          try {
+            console.log("Sending task to server:", task.title);
+            const response = await api.post(`/act/${actId}/tasks`, {
+              title: task.title,
+            });
+            console.log("Task saved successfully:", response.data);
+            return response.data;
+          } catch (error) {
+            console.error("Error saving task:", task.title, error);
+            console.error(
+              "Error details:",
+              error.response?.data || error.message,
+            );
+            return null;
+          }
+        }),
+      );
+
+      // Обновляем состояние, заменяя локальные задачи на сохраненные
+      const savedTasksFiltered = savedTasks.filter((t) => t !== null);
+      const nonLocalTasks = tasks.filter((task) => !task.local);
+      setTasks([...nonLocalTasks, ...savedTasksFiltered]);
+
+      if (savedTasksFiltered.length > 0) {
+        toast.success(
+          `${savedTasksFiltered.length} task(s) saved successfully`,
+        );
+      }
+    } catch (error) {
+      console.error("Error saving local tasks:", error);
+      toast.error("Some tasks could not be saved");
+    }
+  };
 
   // Функции для сохранения и восстановления состояния формы
   const saveFormState = () => {
@@ -270,6 +455,9 @@ export default function CreateAct() {
         id: newActId,
         title: title.trim(),
       });
+
+      // Сохраняем локальные задачи на сервер
+      await saveLocalTasksToServer(newActId);
 
       // Показываем компонент стрима
       setShowStream(true);
@@ -702,7 +890,11 @@ export default function CreateAct() {
         </div>
         <div className={styles.block}>
           <p>Waypoints/Tasks</p>
-          <button type="button" className={styles.typeBtn}>
+          <button
+            type="button"
+            className={styles.typeBtn}
+            onClick={openTasksModal}
+          >
             <img src="/icons/planet.svg" alt="" />
             Setup
           </button>
@@ -930,6 +1122,71 @@ export default function CreateAct() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tasks Modal */}
+      {isTasksModalOpen && (
+        <div className={styles.modalOverlay} onClick={closeTasksModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Stream Tasks</h2>
+              <ModalStripe />
+            </div>
+
+            <div className={styles.modalContent}>
+              <div className={styles.tasksContainer}>
+                {/* New Task Input */}
+                <div className={styles.newTaskForm}>
+                  <input
+                    type="text"
+                    placeholder="Enter new task..."
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        createTask();
+                      }
+                    }}
+                    className={styles.taskInput}
+                  />
+                  <button
+                    onClick={createTask}
+                    className={styles.addTaskButton}
+                    disabled={!newTaskTitle.trim()}
+                  >
+                    Add Task
+                  </button>
+                </div>
+
+                {/* Tasks List */}
+                <div className={styles.tasksList}>
+                  {loadingTasks ? (
+                    <div className={styles.loadingTasks}>Loading tasks...</div>
+                  ) : tasks.length === 0 ? (
+                    <div className={styles.noTasks}>
+                      No tasks yet. Create your first task above!
+                    </div>
+                  ) : (
+                    tasks.map((task) => (
+                      <div key={task.id} className={styles.taskItem}>
+                        <div className={styles.taskContent}>
+                          <span className={styles.taskTitle}>{task.title}</span>
+                        </div>
+                        <button
+                          onClick={() => deleteTask(task.id)}
+                          className={styles.deleteTaskButton}
+                          aria-label="Delete task"
+                        >
+                          <MdDelete size={18} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

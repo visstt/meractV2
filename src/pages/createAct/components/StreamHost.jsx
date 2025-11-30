@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
+import { MdCameraswitch, MdChecklistRtl } from "react-icons/md";
+import { toast } from "react-toastify";
 
 import api from "../../../shared/api/api";
 import { useAuthStore } from "../../../shared/stores/authStore";
@@ -40,6 +42,12 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
   const [showIntro, setShowIntro] = useState(false);
   const [showOutro, setShowOutro] = useState(false);
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0);
+  const [facingMode, setFacingMode] = useState("user"); // "user" = front camera, "environment" = back camera
+
+  // Tasks modal state
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
   const localVideoRef = useRef(null);
   const introVideoRef = useRef(null);
   const outroVideoRef = useRef(null);
@@ -581,8 +589,10 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
       startBackgroundMusic();
 
       // After intro, start camera stream
-      console.log("Creating camera track...");
-      const videoTrack = await AgoraRTC.createCameraVideoTrack();
+      console.log("Creating camera track with facingMode:", facingMode);
+      const videoTrack = await AgoraRTC.createCameraVideoTrack({
+        facingMode: facingMode,
+      });
       localTracksRef.current.videoTrack = videoTrack;
 
       // Play local video
@@ -602,6 +612,92 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
       setIsStreaming(false);
     }
   };
+
+  const switchCamera = async () => {
+    if (!isStreaming || !localTracksRef.current.videoTrack) {
+      console.warn("Cannot switch camera: stream not active");
+      return;
+    }
+
+    try {
+      console.log("Switching camera from", facingMode);
+      const newFacingMode = facingMode === "user" ? "environment" : "user";
+
+      // Stop current video track
+      localTracksRef.current.videoTrack.stop();
+      localTracksRef.current.videoTrack.close();
+
+      // Create new video track with opposite facing mode
+      console.log("Creating new camera track with facingMode:", newFacingMode);
+      const newVideoTrack = await AgoraRTC.createCameraVideoTrack({
+        facingMode: newFacingMode,
+      });
+
+      // Update reference
+      localTracksRef.current.videoTrack = newVideoTrack;
+
+      // Play new video locally
+      if (localVideoRef.current) {
+        newVideoTrack.play(localVideoRef.current);
+      }
+
+      // Unpublish old track and publish new one
+      if (clientRef.current) {
+        await clientRef.current.unpublish();
+        await clientRef.current.publish([
+          localTracksRef.current.audioTrack,
+          newVideoTrack,
+        ]);
+      }
+
+      // Update state
+      setFacingMode(newFacingMode);
+      console.log("Camera switched successfully to:", newFacingMode);
+    } catch (err) {
+      console.error("Error switching camera:", err);
+      setError("Failed to switch camera: " + err.message);
+    }
+  };
+
+  // Tasks functions
+  const fetchTasks = async () => {
+    if (!actId) return;
+
+    try {
+      setLoadingTasks(true);
+      const response = await api.get(`/act/${actId}/tasks`);
+      setTasks(response.data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast.error("Failed to load tasks");
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const toggleTaskCompletion = async (taskId) => {
+    if (!actId) return;
+
+    try {
+      const response = await api.patch(`/act/${actId}/tasks/${taskId}/toggle`);
+      setTasks(
+        tasks.map((task) => (task.id === taskId ? response.data : task)),
+      );
+      toast.success(
+        response.data.isCompleted ? "Task completed!" : "Task reopened",
+      );
+    } catch (error) {
+      console.error("Error toggling task:", error);
+      toast.error("Failed to update task");
+    }
+  };
+
+  // Load tasks when modal opens
+  useEffect(() => {
+    if (isTasksModalOpen) {
+      fetchTasks();
+    }
+  }, [isTasksModalOpen]);
 
   const stopStreaming = async () => {
     try {
@@ -761,10 +857,18 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
             </button>
             <button
               className={styles.button}
-              onClick={onStopStream}
-              disabled={isStreaming}
+              onClick={switchCamera}
+              disabled={!isStreaming || isInitializingRef.current}
+              title="Switch Camera"
             >
-              Exit
+              <MdCameraswitch size={20} /> Flip Camera
+            </button>
+            <button
+              className={styles.button}
+              onClick={() => setIsTasksModalOpen(true)}
+              title="Stream Tasks"
+            >
+              <MdChecklistRtl size={20} /> Tasks
             </button>
           </div>
 
@@ -776,6 +880,70 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
             </p>
           </div>
         </>
+      )}
+
+      {/* Tasks Modal */}
+      {isTasksModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsTasksModalOpen(false)}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2>Stream Tasks</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setIsTasksModalOpen(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.tasksContainer}>
+              {loadingTasks ? (
+                <div className={styles.loadingTasks}>Loading tasks...</div>
+              ) : tasks.length === 0 ? (
+                <div className={styles.noTasks}>
+                  No tasks available for this stream.
+                </div>
+              ) : (
+                <div className={styles.tasksList}>
+                  {tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`${styles.taskItem} ${
+                        task.isCompleted ? styles.taskCompleted : ""
+                      }`}
+                    >
+                      <div className={styles.taskCheckbox}>
+                        <input
+                          type="checkbox"
+                          checked={task.isCompleted}
+                          onChange={() => toggleTaskCompletion(task.id)}
+                          id={`stream-task-${task.id}`}
+                        />
+                        <label htmlFor={`stream-task-${task.id}`}></label>
+                      </div>
+                      <div className={styles.taskContent}>
+                        <span className={styles.taskTitle}>{task.title}</span>
+                        {task.completedAt && (
+                          <span className={styles.taskCompletedTime}>
+                            Completed:{" "}
+                            {new Date(task.completedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

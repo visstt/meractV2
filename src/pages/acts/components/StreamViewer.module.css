@@ -394,3 +394,193 @@
 .mapOverlay :global(.leaflet-touch .leaflet-bar) {
   display: none !important;
 }
+
+/* Tasks Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modalContent {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modalHeader h2 {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.closeButton:hover {
+  opacity: 0.7;
+}
+
+.tasksContainer {
+  overflow-y: auto;
+  max-height: calc(80vh - 100px);
+}
+
+.tasksContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tasksContainer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.tasksContainer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(46, 50, 59, 0.1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 12px 15px;
+  transition: all 0.2s ease;
+}
+
+.taskItem:hover {
+  border-color: rgba(58, 186, 255, 0.5);
+}
+
+.taskCompleted {
+  opacity: 0.6;
+}
+
+.taskCompleted .taskTitle {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.taskCheckbox {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.taskCheckbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: not-allowed;
+}
+
+.taskCheckbox label {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+  cursor: not-allowed;
+}
+
+.taskCheckbox label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #c1c0c3;
+  border-radius: 2px;
+  background-color: #202020;
+  box-sizing: border-box;
+}
+
+.taskCheckbox input[type="checkbox"]:checked + label::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 1px;
+}
+
+.taskContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.taskTitle {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.taskCompletedTime {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+}
+
+.loadingTasks,
+.noTasks {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 40px 20px;
+  font-size: 14px;
+}

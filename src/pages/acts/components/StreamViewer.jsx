@@ -43,6 +43,9 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [userPosition, setUserPosition] = useState([55.751244, 37.618423]);
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   // Use chat hook
   const actId = streamData?.id || channelName?.replace("act_", "");
@@ -239,6 +242,28 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       setStreamDuration(0);
     }
   }, [isConnected]);
+
+  // Fetch tasks when modal is opened
+  const fetchTasks = async () => {
+    if (!actId) return;
+
+    setLoadingTasks(true);
+    try {
+      const response = await api.get(`/act/${actId}/tasks`);
+      setTasks(response.data || []);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isTasksModalOpen) {
+      fetchTasks();
+    }
+  }, [isTasksModalOpen, actId]);
 
   const connectToStream = async (streamToken) => {
     if (!streamToken) {
@@ -546,7 +571,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           >
             <img src="/icons/chat/geo.png" alt="Location" />
           </button>
-          <button className={styles.actionButton}>
+          <button
+            className={styles.actionButton}
+            onClick={() => setIsTasksModalOpen(true)}
+          >
             <img src="/icons/chat/file.png" alt="File" />
           </button>
           <button className={styles.actionButton}>
@@ -595,6 +623,66 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
               </Popup>
             </Marker>
           </MapContainer>
+        </div>
+      )}
+
+      {/* Tasks Modal */}
+      {isTasksModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsTasksModalOpen(false)}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2>Waypoints / Tasks</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setIsTasksModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.tasksContainer}>
+              {loadingTasks ? (
+                <div className={styles.loadingTasks}>Loading tasks...</div>
+              ) : tasks.length === 0 ? (
+                <div className={styles.noTasks}>No tasks available</div>
+              ) : (
+                <div className={styles.tasksList}>
+                  {tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`${styles.taskItem} ${task.isCompleted ? styles.taskCompleted : ""}`}
+                    >
+                      <div className={styles.taskCheckbox}>
+                        <input
+                          type="checkbox"
+                          id={`task-${task.id}`}
+                          checked={task.isCompleted}
+                          disabled
+                          readOnly
+                        />
+                        <label htmlFor={`task-${task.id}`}></label>
+                      </div>
+                      <div className={styles.taskContent}>
+                        <div className={styles.taskTitle}>{task.title}</div>
+                        {task.isCompleted && task.completedAt && (
+                          <div className={styles.taskCompletedTime}>
+                            Completed:{" "}
+                            {new Date(task.completedAt).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

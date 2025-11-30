@@ -666,3 +666,159 @@
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.6);
 }
+
+/* Tasks Modal Styles */
+.tasksContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.tasksContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tasksContainer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.tasksContainer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.newTaskForm {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.taskInput {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  height: 34px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(46, 50, 59, 0.1) 100%
+  );
+  padding: 0 12px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.taskInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.taskInput:focus {
+  border-color: rgba(58, 186, 255, 0.6);
+}
+
+.addTaskButton {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(46, 50, 59, 0.1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  color: #fff;
+  padding: 8px 16px;
+  height: 34px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.addTaskButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(58, 186, 255, 0.6);
+}
+
+.addTaskButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(46, 50, 59, 0.1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.taskItem:hover {
+  border-color: rgba(58, 186, 255, 0.5);
+}
+
+.taskContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.taskTitle {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.localBadge {
+  color: rgba(255, 186, 58, 0.9);
+  font-size: 11px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.deleteTaskButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.deleteTaskButton:hover {
+  color: #ff6b6b;
+}
+
+.loadingTasks,
+.noTasks {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 30px 20px;
+  font-size: 13px;
+}
