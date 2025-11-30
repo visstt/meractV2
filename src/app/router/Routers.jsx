@@ -69,7 +69,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/guilds",
-    element: <GuildsPage />,
+    element: (
+      <RequireAuth>
+        <GuildsPage />
+      </RequireAuth>
+    ),
   },
   {
     path: "/guilds/:id",

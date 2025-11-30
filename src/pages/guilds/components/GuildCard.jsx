@@ -10,13 +10,13 @@ export default function GuildCard({ guild }) {
   };
 
   return (
-    <div
-      className={styles.guildCard}
-      onClick={handleCardClick}
-      style={{
-        backgroundImage: `url(${guild.logoFileName || "/images/guildCardBg.png"}), linear-gradient(180deg, rgba(9, 84, 134, 0.45) 0%, rgba(9, 84, 134, 0) 15%), linear-gradient(180deg, #095486 37.4%, rgba(115, 115, 115, 0) 79.9%)`,
-      }}
-    >
+    <div className={styles.guildCard} onClick={handleCardClick}>
+      <div
+        className={styles.guildBanner}
+        style={{
+          backgroundImage: `url(${guild.logoFileName || "/images/guildCardBg.png"})`,
+        }}
+      ></div>
       <img
         src="/icons/link_icon.svg"
         alt="link_icon"
