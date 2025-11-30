@@ -15,6 +15,7 @@ import ActsPage from "../../pages/acts/ActsPage";
 import CreateAct from "../../pages/createAct/CreateAct";
 import GuildDetailPage from "../../pages/guilds/GuildDetailPage";
 import GuildsPage from "../../pages/guilds/GuildsPage";
+import RankPage from "../../pages/rank/RankPage";
 import SceneControlIntro from "../../pages/sceneControl/intro/SceneControlIntro";
 import SelectSequel from "../../pages/sceneControl/intro/SelectSequel/SelectSequel";
 import SceneControlMusic from "../../pages/sceneControl/music/SceneControlMusic";
@@ -88,6 +89,14 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <AchievementsPage />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/rank",
+    element: (
+      <RequireAuth>
+        <RankPage />
       </RequireAuth>
     ),
   },

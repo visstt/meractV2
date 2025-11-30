@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
+
 import { useLocation, useNavigate } from "react-router-dom";
 
+import api from "../../api/api";
 import styles from "./NavBar.module.css";
 
 function ActIcon(props) {
@@ -60,16 +63,43 @@ function AchievementIcon(props) {
 export default function NavBar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [guildId, setGuildId] = useState(null);
 
   const navItems = [
     { label: "Acts", icon: ActIcon, path: "/acts" },
-    { label: "Chat", icon: ChatIcon, path: "/chat" },
+    { label: "Chat", icon: ChatIcon, path: "/chat", isGuildChat: true },
     { label: "Guilds", icon: GuildIcon, path: "/guilds" },
     { label: "Rank", icon: RankIcon, path: "/rank" },
   ];
 
+  useEffect(() => {
+    const fetchUserGuild = async () => {
+      try {
+        const response = await api.get("/guild/get-my-guild");
+        if (response.data?.id) {
+          setGuildId(response.data.id);
+        }
+      } catch (err) {
+        console.error("Error fetching guild for chat:", err);
+      }
+    };
+
+    fetchUserGuild();
+  }, []);
+
   const handlePlayClick = () => {
     navigate("/create-act");
+  };
+
+  const handleNavClick = (item) => {
+    if (item.isGuildChat && guildId) {
+      navigate(`/guilds/${guildId}`);
+    } else if (item.isGuildChat) {
+      // Если нет гильдии, можно перенаправить на страницу гильдий
+      navigate("/guilds");
+    } else {
+      navigate(item.path);
+    }
   };
 
   return (
@@ -95,7 +125,7 @@ export default function NavBar() {
                   " " +
                   (isActive ? styles.active : styles.inactive)
                 }
-                onClick={() => navigate(item.path)}
+                onClick={() => handleNavClick(item)}
                 style={{
                   cursor: "pointer",
                 }}
