@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import api from "../../shared/api/api";
+import { useActsStore } from "../../shared/stores/actsStore";
 import { useAuthStore } from "../../shared/stores/authStore";
 import { useSequelStore } from "../../shared/stores/sequelStore";
 import { ActFormat, ActType, SelectionMethods } from "../../shared/types/act";
@@ -41,12 +42,23 @@ export default function CreateAct() {
 
   // Состояние для модального окна задач
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
-  const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
 
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
+
+  // Используем store для надежного хранения tasks
+  const {
+    createActFormState,
+    setCreateActTasks,
+    addCreateActTask,
+    updateCreateActTask,
+    deleteCreateActTask,
+    clearCreateActForm,
+  } = useActsStore();
+
+  const tasks = createActFormState.tasks;
   const {
     selectedSequelId,
     selectedSequel,
@@ -126,7 +138,7 @@ export default function CreateAct() {
     try {
       setLoadingTasks(true);
       const response = await api.get(`/act/${createdAct.id}/tasks`);
-      setTasks(response.data);
+      setCreateActTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast.error("Failed to load tasks");
@@ -141,7 +153,7 @@ export default function CreateAct() {
       return;
     }
 
-    // Если акт еще не создан, добавляем задачу локально
+    // Если акт еще не создан, добавляем задачу в store
     if (!createdAct?.id) {
       const localTask = {
         id: `temp-${Date.now()}`,
@@ -150,7 +162,7 @@ export default function CreateAct() {
         createdAt: new Date().toISOString(),
         local: true, // флаг для отличия локальных задач
       };
-      setTasks([...tasks, localTask]);
+      addCreateActTask(localTask);
       setNewTaskTitle("");
       toast.success("Task added (will be saved when act is created)");
       return;
@@ -161,7 +173,7 @@ export default function CreateAct() {
       const response = await api.post(`/act/${createdAct.id}/tasks`, {
         title: newTaskTitle,
       });
-      setTasks([...tasks, response.data]);
+      addCreateActTask(response.data);
       setNewTaskTitle("");
       toast.success("Task created successfully");
     } catch (error) {
@@ -171,20 +183,13 @@ export default function CreateAct() {
   };
 
   const toggleTaskCompletion = async (taskId, currentStatus) => {
-    // Если задача локальная (не сохранена на сервере), обновляем локально
+    // Если задача локальная (не сохранена на сервере), обновляем в store
     const task = tasks.find((t) => t.id === taskId);
     if (task?.local) {
-      setTasks(
-        tasks.map((t) =>
-          t.id === taskId
-            ? {
-                ...t,
-                isCompleted: !currentStatus,
-                completedAt: !currentStatus ? new Date().toISOString() : null,
-              }
-            : t,
-        ),
-      );
+      updateCreateActTask(taskId, {
+        isCompleted: !currentStatus,
+        completedAt: !currentStatus ? new Date().toISOString() : null,
+      });
       toast.success(!currentStatus ? "Task completed!" : "Task reopened");
       return;
     }
@@ -198,9 +203,7 @@ export default function CreateAct() {
           isCompleted: !currentStatus,
         },
       );
-      setTasks(
-        tasks.map((task) => (task.id === taskId ? response.data : task)),
-      );
+      updateCreateActTask(taskId, response.data);
       toast.success(
         response.data.isCompleted ? "Task completed!" : "Task reopened",
       );
@@ -211,10 +214,10 @@ export default function CreateAct() {
   };
 
   const deleteTask = async (taskId) => {
-    // Если задача локальная, просто удаляем из состояния
+    // Если задача локальная, просто удаляем из store
     const task = tasks.find((t) => t.id === taskId);
     if (task?.local) {
-      setTasks(tasks.filter((task) => task.id !== taskId));
+      deleteCreateActTask(taskId);
       toast.success("Task deleted");
       return;
     }
@@ -223,7 +226,7 @@ export default function CreateAct() {
 
     try {
       await api.delete(`/act/${createdAct.id}/tasks/${taskId}`);
-      setTasks(tasks.filter((task) => task.id !== taskId));
+      deleteCreateActTask(taskId);
       toast.success("Task deleted");
     } catch (error) {
       console.error("Error deleting task:", error);
@@ -253,7 +256,7 @@ export default function CreateAct() {
               title: task.title,
             });
             console.log("Task saved successfully:", response.data);
-            return response.data;
+            return { oldId: task.id, newTask: response.data };
           } catch (error) {
             console.error("Error saving task:", task.title, error);
             console.error(
@@ -265,12 +268,20 @@ export default function CreateAct() {
         }),
       );
 
-      // Обновляем состояние, заменяя локальные задачи на сохраненные
+      // Обновляем состояние в store, заменяя локальные задачи на сохраненные
       const savedTasksFiltered = savedTasks.filter((t) => t !== null);
-      const nonLocalTasks = tasks.filter((task) => !task.local);
-      setTasks([...nonLocalTasks, ...savedTasksFiltered]);
 
       if (savedTasksFiltered.length > 0) {
+        // Удаляем старые локальные задачи
+        savedTasksFiltered.forEach(({ oldId }) => {
+          deleteCreateActTask(oldId);
+        });
+
+        // Добавляем новые задачи с сервера
+        savedTasksFiltered.forEach(({ newTask }) => {
+          addCreateActTask(newTask);
+        });
+
         toast.success(
           `${savedTasksFiltered.length} task(s) saved successfully`,
         );
@@ -447,6 +458,8 @@ export default function CreateAct() {
       clearSelectedOutro();
       clearSelectedMusic();
 
+      console.log("Tasks before saving to server:", tasks);
+
       // Сохраняем данные созданного act
       const newActId = result.actId || result.id;
       console.log("Setting createdAct with id:", newActId);
@@ -467,6 +480,8 @@ export default function CreateAct() {
   const handleStopStream = () => {
     setShowStream(false);
     setCreatedAct(null);
+    // Очищаем tasks из store после завершения стрима
+    clearCreateActForm();
     // Перенаправляем на страницу актов
     navigate("/acts");
   };

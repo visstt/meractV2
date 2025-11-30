@@ -22,6 +22,11 @@ export const useActsStore = create(
         },
       ],
 
+      // Хранение задач для создаваемого акта
+      createActFormState: {
+        tasks: [],
+      },
+
       // Добавить новый акт
       addAct: (actData) => {
         const newAct = {
@@ -59,6 +64,55 @@ export const useActsStore = create(
       clearActs: () => {
         set((state) => ({
           acts: state.acts.filter((act) => act.isMock),
+        }));
+      },
+
+      // Методы для управления tasks в форме создания акта
+      setCreateActTasks: (tasks) => {
+        set((state) => ({
+          createActFormState: {
+            ...state.createActFormState,
+            tasks: tasks,
+          },
+        }));
+      },
+
+      addCreateActTask: (task) => {
+        set((state) => ({
+          createActFormState: {
+            ...state.createActFormState,
+            tasks: [...state.createActFormState.tasks, task],
+          },
+        }));
+      },
+
+      updateCreateActTask: (taskId, updates) => {
+        set((state) => ({
+          createActFormState: {
+            ...state.createActFormState,
+            tasks: state.createActFormState.tasks.map((t) =>
+              t.id === taskId ? { ...t, ...updates } : t,
+            ),
+          },
+        }));
+      },
+
+      deleteCreateActTask: (taskId) => {
+        set((state) => ({
+          createActFormState: {
+            ...state.createActFormState,
+            tasks: state.createActFormState.tasks.filter(
+              (t) => t.id !== taskId,
+            ),
+          },
+        }));
+      },
+
+      clearCreateActForm: () => {
+        set((state) => ({
+          createActFormState: {
+            tasks: [],
+          },
         }));
       },
     }),
