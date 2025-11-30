@@ -73,12 +73,13 @@ export default function GuildsPage() {
         </div>
 
         <div className={styles.guildCards}>
-          {loading && <p>Loading...</p>}
-          {error && <p>Error: {error}</p>}
-          {!loading && !error && guild && <GuildCard guild={guild} />}
-          {!loading && !error && !guild && (
-            <p>You are not a member of any guild</p>
+          {loading && <p className={styles.noGuildMessage}>Loading...</p>}
+          {!loading && !guild && (
+            <p className={styles.noGuildMessage}>
+              You are not a member of any guild
+            </p>
           )}
+          {!loading && guild && <GuildCard guild={guild} />}
         </div>
       </div>
       <NavBar />

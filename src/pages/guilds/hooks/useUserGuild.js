@@ -11,14 +11,14 @@ export const useUserGuild = () => {
 
   useEffect(() => {
     const fetchUserGuild = async () => {
-      if (!user?.id) {
+      if (!user) {
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        const response = await api.get(`/guild/${user.id}`);
+        const response = await api.get("/guild/get-my-guild");
         setGuild(response.data);
         setError(null);
       } catch (err) {
@@ -30,7 +30,7 @@ export const useUserGuild = () => {
     };
 
     fetchUserGuild();
-  }, [user?.id]);
+  }, [user]);
 
   return { guild, loading, error };
 };

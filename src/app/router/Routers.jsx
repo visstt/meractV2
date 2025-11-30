@@ -13,6 +13,7 @@ import SignUp from "../../features/Auth/registration/SignUp";
 import AchievementsPage from "../../pages/achievements/AchievementsPage";
 import ActsPage from "../../pages/acts/ActsPage";
 import CreateAct from "../../pages/createAct/CreateAct";
+import GuildDetailPage from "../../pages/guilds/GuildDetailPage";
 import GuildsPage from "../../pages/guilds/GuildsPage";
 import SceneControlIntro from "../../pages/sceneControl/intro/SceneControlIntro";
 import SelectSequel from "../../pages/sceneControl/intro/SelectSequel/SelectSequel";
@@ -69,6 +70,14 @@ export const router = createBrowserRouter([
   {
     path: "/guilds",
     element: <GuildsPage />,
+  },
+  {
+    path: "/guilds/:id",
+    element: (
+      <RequireAuth>
+        <GuildDetailPage />
+      </RequireAuth>
+    ),
   },
   {
     path: "/achievements",

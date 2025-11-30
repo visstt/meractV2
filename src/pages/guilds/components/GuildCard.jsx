@@ -1,9 +1,18 @@
+import { useNavigate } from "react-router-dom";
+
 import styles from "./GuildCard.module.css";
 
 export default function GuildCard({ guild }) {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/guilds/${guild.id}`);
+  };
+
   return (
     <div
       className={styles.guildCard}
+      onClick={handleCardClick}
       style={{
         backgroundImage: `url(${guild.logoFileName || "/images/guildCardBg.png"}), linear-gradient(180deg, rgba(9, 84, 134, 0.45) 0%, rgba(9, 84, 134, 0) 15%), linear-gradient(180deg, #095486 37.4%, rgba(115, 115, 115, 0) 79.9%)`,
       }}
