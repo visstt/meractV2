@@ -379,14 +379,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     navigate("/acts");
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (chatMessage.trim() && !sending) {
-      try {
-        await sendMessage(chatMessage);
-        setChatMessage("");
-      } catch (error) {
-        console.error("Failed to send message:", error);
-      }
+      sendMessage(chatMessage);
+      setChatMessage("");
     }
   };
 
@@ -400,14 +396,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     setShowEmojiPicker(!showEmojiPicker);
   };
 
-  const handleEmojiSelect = async (emoji) => {
+  const handleEmojiSelect = (emoji) => {
     if (!sending) {
-      try {
-        await sendMessage(emoji);
-        setShowEmojiPicker(false);
-      } catch (error) {
-        console.error("Failed to send emoji:", error);
-      }
+      sendMessage(emoji);
+      setShowEmojiPicker(false);
     }
   };
 

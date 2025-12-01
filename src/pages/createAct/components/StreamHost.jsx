@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 import api from "../../../shared/api/api";
 import { useAuthStore } from "../../../shared/stores/authStore";
+import useChat from "../../acts/hooks/useChat";
 import styles from "./StreamHost.module.css";
 
 // Function to extract data from JWT token
@@ -48,6 +49,27 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+
+  // Chat state
+  const [chatMessage, setChatMessage] = useState("");
+  const {
+    messages: chatMessages,
+    sendMessage,
+    sending,
+    isConnected,
+    fetchMessages,
+  } = useChat(actId);
+
+  // Логирование для отладки чата
+  useEffect(() => {
+    console.log("🎥 StreamHost чат:", {
+      actId,
+      chatMessagesCount: chatMessages?.length || 0,
+      isConnected,
+      messages: chatMessages,
+    });
+  }, [actId, chatMessages, isConnected]);
+
   const localVideoRef = useRef(null);
   const introVideoRef = useRef(null);
   const outroVideoRef = useRef(null);
@@ -692,6 +714,20 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
     }
   };
 
+  // Chat handlers
+  const handleSendMessage = () => {
+    if (chatMessage.trim() && !sending) {
+      sendMessage(chatMessage);
+      setChatMessage("");
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSendMessage();
+    }
+  };
+
   // Load tasks when modal opens
   useEffect(() => {
     if (isTasksModalOpen) {
@@ -878,6 +914,43 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
                 ? "Your camera and microphone are now live!"
                 : 'Click "Start Stream" to go live. Make sure your camera and microphone are connected.'}
             </p>
+          </div>
+
+          {/* Chat Section */}
+          <div className={styles.chatSection}>
+            <div className={styles.chatHeader}>
+              <h3>💬 Chat {isConnected ? "🟢" : "🔴"}</h3>
+            </div>
+            <div className={styles.chatMessages}>
+              {chatMessages && chatMessages.length > 0 ? (
+                chatMessages.map((message) => (
+                  <div key={message.id} className={styles.chatMessage}>
+                    <strong>{message.user?.username || "User"}:</strong>{" "}
+                    {message.content || message.message}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.noChatMessages}>No messages yet</div>
+              )}
+            </div>
+            <div className={styles.chatInputContainer}>
+              <input
+                type="text"
+                className={styles.chatInput}
+                placeholder="Type a message..."
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={!isConnected}
+              />
+              <button
+                className={styles.chatSendButton}
+                onClick={handleSendMessage}
+                disabled={sending || !chatMessage.trim() || !isConnected}
+              >
+                Send
+              </button>
+            </div>
           </div>
         </>
       )}
