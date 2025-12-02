@@ -19,21 +19,21 @@ const useChat = (actId) => {
 
     console.log(`🔌 Подключение к чату для акта ${actId}...`);
 
-    // Создаем подключение к базовому URL с namespace /chat
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
-      path: "/socket.io",
-      withCredentials: true, // ОБЯЗАТЕЛЬНО для отправки httpOnly cookies
-      transports: ["websocket", "polling"],
-    });
+    // Создаем подключение напрямую к namespace /chat
+    const socket = io(
+      `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/chat`,
+      {
+        path: "/socket.io",
+        withCredentials: true, // ОБЯЗАТЕЛЬНО для отправки httpOnly cookies
+        transports: ["websocket", "polling"],
+      },
+    );
 
-    // Подключаемся к namespace /chat
-    const chatSocket = socket.of("/chat");
+    socketRef.current = socket;
 
-    socketRef.current = chatSocket;
-
-    // Обработчики событий для chatSocket
-    chatSocket.on("connect", () => {
-      console.log("✅ Подключен к чату актов, socket.id:", chatSocket.id);
+    // Обработчики событий
+    socket.on("connect", () => {
+      console.log("✅ Подключен к чату актов, socket.id:", socket.id);
       setIsConnected(true);
       setError(null);
 
@@ -47,7 +47,7 @@ const useChat = (actId) => {
         console.log(
           "📡 Отправка технического сообщения для активации подписки...",
         );
-        chatSocket.emit("sendMessage", {
+        socket.emit("sendMessage", {
           actId: parseInt(actId),
           content: " ", // Пробел - будет отфильтрован при отображении
         });
@@ -57,19 +57,19 @@ const useChat = (actId) => {
       }, 100);
     });
 
-    chatSocket.on("connect_error", (err) => {
+    socket.on("connect_error", (err) => {
       console.error("❌ Ошибка подключения к чату:", err.message);
       setError("Failed to connect to chat");
       setIsConnected(false);
     });
 
-    chatSocket.on("disconnect", (reason) => {
+    socket.on("disconnect", (reason) => {
       console.log("🔌 Отключен от чата, причина:", reason);
       setIsConnected(false);
     });
 
     // Получение нового сообщения
-    chatSocket.on("newMessage", (message) => {
+    socket.on("newMessage", (message) => {
       console.log("📨 Новое сообщение получено через WebSocket:", message);
 
       // Игнорируем пустые сообщения (технические)
@@ -98,14 +98,13 @@ const useChat = (actId) => {
     });
 
     // Добавим обработку всех событий для отладки
-    chatSocket.onAny((eventName, ...args) => {
+    socket.onAny((eventName, ...args) => {
       console.log(`🔔 Socket event: ${eventName}`, args);
     });
 
     // Очистка при размонтировании
     return () => {
       console.log("🔌 Отключение от чата для акта", actId);
-      chatSocket.disconnect();
       socket.disconnect();
       socketRef.current = null;
     };
