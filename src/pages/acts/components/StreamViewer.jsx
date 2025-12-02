@@ -3,7 +3,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import {
+  Circle,
+  MapContainer,
+  Marker,
+  Polyline,
+  Popup,
+  TileLayer,
+} from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 
 import api from "../../../shared/api/api";
@@ -46,6 +53,9 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState(null);
+  const [startLocation, setStartLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
 
   // Use chat hook
   const actId = streamData?.id || channelName?.replace("act_", "");
@@ -264,6 +274,64 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       fetchTasks();
     }
   }, [isTasksModalOpen, actId]);
+
+  // Fetch route data from streamData
+  useEffect(() => {
+    const fetchRouteData = async () => {
+      console.log("StreamViewer - Fetching route data:", {
+        startLatitude: streamData?.startLatitude,
+        startLongitude: streamData?.startLongitude,
+        destinationLatitude: streamData?.destinationLatitude,
+        destinationLongitude: streamData?.destinationLongitude,
+      });
+
+      if (streamData?.startLatitude && streamData?.startLongitude) {
+        const start = {
+          latitude: streamData.startLatitude,
+          longitude: streamData.startLongitude,
+        };
+        setStartLocation(start);
+        console.log("StreamViewer - Start location set:", start);
+      }
+
+      if (streamData?.destinationLatitude && streamData?.destinationLongitude) {
+        const destination = {
+          latitude: streamData.destinationLatitude,
+          longitude: streamData.destinationLongitude,
+        };
+        setDestinationLocation(destination);
+        console.log("StreamViewer - Destination location set:", destination);
+
+        // Build route if both start and destination exist
+        if (streamData?.startLatitude && streamData?.startLongitude) {
+          try {
+            const response = await fetch(
+              `https://router.project-osrm.org/route/v1/foot/${streamData.startLongitude},${streamData.startLatitude};${streamData.destinationLongitude},${streamData.destinationLatitude}?overview=full&geometries=geojson`,
+            );
+            const data = await response.json();
+
+            if (data.routes && data.routes[0]) {
+              const coordinates = data.routes[0].geometry.coordinates.map(
+                (coord) => [coord[1], coord[0]],
+              );
+              setRouteCoordinates(coordinates);
+              console.log(
+                "StreamViewer - Route coordinates set:",
+                coordinates.length,
+                "points",
+              );
+            }
+          } catch (error) {
+            console.error("Error fetching route:", error);
+          }
+        }
+      }
+    };
+
+    if (showMap && streamData) {
+      fetchRouteData();
+    }
+  }, [showMap, streamData]);
 
   const connectToStream = async (streamToken) => {
     if (!streamToken) {
@@ -595,12 +663,16 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           </button>
 
           <MapContainer
-            center={userPosition}
+            center={
+              startLocation
+                ? [startLocation.latitude, startLocation.longitude]
+                : userPosition
+            }
             zoom={15}
             style={{
               width: "100%",
               height: "100%",
-              filter: "grayscale(100%) brightness(0.5) contrast(1.3)",
+              filter: "grayscale(100%) invert(1)",
             }}
             zoomControl={true}
             attributionControl={false}
@@ -609,6 +681,40 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             />
+            {startLocation && (
+              <Circle
+                center={[startLocation.latitude, startLocation.longitude]}
+                radius={50}
+                pathOptions={{
+                  color: "black",
+                  fillColor: "black",
+                  fillOpacity: 0.8,
+                  weight: 2,
+                }}
+              />
+            )}
+            {routeCoordinates && (
+              <Polyline
+                positions={routeCoordinates}
+                pathOptions={{
+                  color: "black",
+                  weight: 4,
+                  opacity: 0.8,
+                }}
+              />
+            )}
+            {destinationLocation && (
+              <Marker
+                position={[
+                  destinationLocation.latitude,
+                  destinationLocation.longitude,
+                ]}
+              >
+                <Popup>
+                  <div style={{ color: "#000" }}>Destination</div>
+                </Popup>
+              </Marker>
+            )}
             <Marker position={userPosition}>
               <Popup>
                 <div style={{ color: "#000" }}>You are here</div>

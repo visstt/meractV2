@@ -189,6 +189,38 @@ export function useCreateAct() {
         }
       }
 
+      // Добавляем координаты если есть
+      if (
+        actData.startLatitude !== null &&
+        actData.startLatitude !== undefined
+      ) {
+        formData.append("startLatitude", actData.startLatitude.toString());
+      }
+      if (
+        actData.startLongitude !== null &&
+        actData.startLongitude !== undefined
+      ) {
+        formData.append("startLongitude", actData.startLongitude.toString());
+      }
+      if (
+        actData.destinationLatitude !== null &&
+        actData.destinationLatitude !== undefined
+      ) {
+        formData.append(
+          "destinationLatitude",
+          actData.destinationLatitude.toString(),
+        );
+      }
+      if (
+        actData.destinationLongitude !== null &&
+        actData.destinationLongitude !== undefined
+      ) {
+        formData.append(
+          "destinationLongitude",
+          actData.destinationLongitude.toString(),
+        );
+      }
+
       // Добавляем файл если есть
       if (actData.photo) {
         formData.append("photo", actData.photo);

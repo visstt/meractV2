@@ -16,7 +16,7 @@ function getCookie(name) {
 }
 
 function App() {
-  const { logout, isAuthenticated } = useAuthStore();
+  const { logout, isAuthenticated, setLocation } = useAuthStore();
 
   useEffect(() => {
     // Проверяем наличие токенов в cookies при загрузке
@@ -30,6 +30,34 @@ function App() {
       window.location.href = "/login";
     }
   }, [isAuthenticated, logout]);
+
+  // Запрашиваем геолокацию при входе в приложение
+  useEffect(() => {
+    if (isAuthenticated && navigator.geolocation) {
+      console.log("📍 Запрос доступа к геолокации...");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("✅ Геолокация получена:", locationData);
+          setLocation(locationData);
+        },
+        (error) => {
+          console.error("❌ Ошибка получения геолокации:", error.message);
+          // Не блокируем приложение, если пользователь отказал в доступе
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+      );
+    }
+  }, [isAuthenticated, setLocation]);
 
   return (
     <PasswordProtection>

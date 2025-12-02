@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { MdDelete } from "react-icons/md";
+import {
+  Circle,
+  MapContainer,
+  Marker,
+  Polyline,
+  TileLayer,
+  useMapEvents,
+} from "react-leaflet";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -45,8 +55,20 @@ export default function CreateAct() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
 
+  // Состояние для карты и координат
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    location,
+    routeDestination,
+    routeCoordinates,
+    setRouteDestination,
+    setRouteCoordinates,
+    clearRoute,
+  } = useAuthStore();
 
   // Используем store для надежного хранения tasks
   const {
@@ -423,6 +445,13 @@ export default function CreateAct() {
     console.log("Selected intro ID before creating act:", selectedIntroId);
     console.log("Selected outro ID before creating act:", selectedOutroId);
     console.log("Selected music IDs before creating act:", selectedMusicIds);
+    console.log("Location from store:", location);
+    console.log("Route destination from store:", routeDestination);
+    console.log("Route coordinates from store:", routeCoordinates);
+    console.log(
+      "Will add destination coordinates:",
+      routeDestination ? true : false,
+    );
 
     const actData = {
       title: title.trim(),
@@ -439,9 +468,23 @@ export default function CreateAct() {
         selectedIntroId !== undefined && { introId: selectedIntroId }), // Добавляем introId если выбрано
       ...(selectedOutroId !== null &&
         selectedOutroId !== undefined && { outroId: selectedOutroId }), // Добавляем outroId если выбрано
+      ...(location && {
+        startLatitude: location.latitude,
+        startLongitude: location.longitude,
+      }), // Добавляем стартовую позицию стримера из геолокации
+      ...(routeDestination && {
+        destinationLatitude: routeDestination.latitude,
+        destinationLongitude: routeDestination.longitude,
+      }), // Добавляем точку назначения если выбрана метка на карте
     };
 
     console.log("Creating act with data:", actData);
+    console.log("Act data includes coordinates:", {
+      hasStartCoordinates: !!(location?.latitude && location?.longitude),
+      hasDestinationCoordinates: !!(
+        routeDestination?.latitude && routeDestination?.longitude
+      ),
+    });
 
     const result = await createAct(actData);
 
@@ -480,6 +523,7 @@ export default function CreateAct() {
   const handleStopStream = () => {
     setShowStream(false);
     setCreatedAct(null);
+    clearRoute(); // Очищаем маршрут из стора
     // Очищаем tasks из store после завершения стрима
     clearCreateActForm();
     // Перенаправляем на страницу актов
@@ -493,6 +537,9 @@ export default function CreateAct() {
         actId={createdAct.id}
         actTitle={createdAct.title}
         onStopStream={handleStopStream}
+        startLocation={location}
+        destinationLocation={routeDestination}
+        routeCoordinates={routeCoordinates}
       />
     );
   }
@@ -915,6 +962,17 @@ export default function CreateAct() {
           </button>
         </div>
         <div className={styles.block}>
+          <p>Map</p>
+          <button
+            type="button"
+            className={styles.typeBtn}
+            onClick={() => setIsMapModalOpen(true)}
+          >
+            <img src="/icons/planet.svg" alt="" />
+            {routeDestination ? "Edit Route" : "Add Route"}
+          </button>
+        </div>
+        <div className={styles.block}>
           <p>Privacy settings</p>
           <div className={styles.fileRow}>
             <button
@@ -1206,6 +1264,163 @@ export default function CreateAct() {
           </div>
         </div>
       )}
+
+      {/* Map Modal */}
+      {isMapModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsMapModalOpen(false)}
+        >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Select Location</h2>
+              <ModalStripe />
+            </div>
+
+            <div className={styles.modalContent}>
+              <p
+                style={{ marginBottom: "12px", fontSize: "13px", opacity: 0.8 }}
+              >
+                Click on the map to select a location for your act
+              </p>
+              <div
+                style={{
+                  height: "350px",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                }}
+              >
+                <MapContainer
+                  center={
+                    routeDestination
+                      ? [routeDestination.latitude, routeDestination.longitude]
+                      : location
+                        ? [location.latitude, location.longitude]
+                        : [55.751244, 37.618423]
+                  }
+                  zoom={13}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    filter: "grayscale(100%) invert(1)",
+                  }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <LocationSelector
+                    setRouteDestination={setRouteDestination}
+                    setRouteCoordinates={setRouteCoordinates}
+                    startLocation={location}
+                  />
+                  {location && (
+                    <Circle
+                      center={[location.latitude, location.longitude]}
+                      radius={50}
+                      pathOptions={{
+                        color: "black",
+                        fillColor: "black",
+                        fillOpacity: 0.8,
+                        weight: 2,
+                      }}
+                    />
+                  )}
+                  {routeCoordinates && (
+                    <Polyline
+                      positions={routeCoordinates}
+                      pathOptions={{
+                        color: "black",
+                        weight: 4,
+                        opacity: 0.8,
+                      }}
+                    />
+                  )}
+                  {routeDestination && (
+                    <Marker
+                      position={[
+                        routeDestination.latitude,
+                        routeDestination.longitude,
+                      ]}
+                    />
+                  )}
+                </MapContainer>
+              </div>
+              {routeDestination && (
+                <div style={{ marginTop: "12px", fontSize: "12px" }}>
+                  <strong>Selected coordinates:</strong>
+                  <br />
+                  Latitude: {routeDestination.latitude.toFixed(6)}
+                  <br />
+                  Longitude: {routeDestination.longitude.toFixed(6)}
+                </div>
+              )}
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => {
+                    clearRoute();
+                    setIsMapModalOpen(false);
+                  }}
+                  className={styles.cancelButton}
+                  style={{ fontSize: "13px", padding: "8px 16px" }}
+                >
+                  Clear Location
+                </button>
+                <button
+                  onClick={() => setIsMapModalOpen(false)}
+                  className={styles.saveButton}
+                  disabled={!routeDestination}
+                  style={{ fontSize: "13px", padding: "8px 16px" }}
+                >
+                  Confirm Location
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Компонент для обработки кликов по карте
+function LocationSelector({
+  setRouteDestination,
+  setRouteCoordinates,
+  startLocation,
+}) {
+  useMapEvents({
+    async click(e) {
+      const destination = {
+        latitude: e.latlng.lat,
+        longitude: e.latlng.lng,
+      };
+      console.log("Map clicked, destination set to:", destination);
+      setRouteDestination(destination);
+      console.log("Start location:", startLocation);
+
+      // Получаем маршрут от точки старта до выбранной точки
+      if (startLocation) {
+        try {
+          const response = await fetch(
+            `https://router.project-osrm.org/route/v1/foot/${startLocation.longitude},${startLocation.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`,
+          );
+          const data = await response.json();
+
+          if (data.routes && data.routes[0]) {
+            const coordinates = data.routes[0].geometry.coordinates.map(
+              (coord) => [coord[1], coord[0]],
+            );
+            setRouteCoordinates(coordinates);
+            toast.success("Route successfully built!");
+          }
+        } catch (error) {
+          console.error("Error fetching route:", error);
+          toast.error("Failed to build route");
+        }
+      }
+    },
+  });
+
+  return null;
 }

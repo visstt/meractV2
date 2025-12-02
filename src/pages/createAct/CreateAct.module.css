@@ -319,8 +319,8 @@
 .modal {
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 10px;
-  width: 352px;
-  height: 450px;
+  width: 380px;
+  max-height: 85vh;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -335,6 +335,11 @@
   justify-content: center;
   align-items: center;
   padding: 20px 24px 10px 20px;
+}
+
+.modalContent {
+  padding: 0 20px 20px 20px;
+  overflow-y: auto;
 }
 
 .modalHeader h2 {
@@ -821,4 +826,46 @@
   color: rgba(255, 255, 255, 0.5);
   padding: 30px 20px;
   font-size: 13px;
+}
+
+/* Map Modal Buttons */
+.saveButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #3abaff 0%, #2196f3 100%);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 186, 255, 0.4);
+}
+
+.saveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
 }

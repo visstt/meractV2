@@ -1,7 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { IoSend } from "react-icons/io5";
 import { MdCameraswitch, MdChecklistRtl } from "react-icons/md";
+import {
+  Circle,
+  MapContainer,
+  Marker,
+  Polyline,
+  TileLayer,
+} from "react-leaflet";
 import { toast } from "react-toastify";
 
 import api from "../../../shared/api/api";
@@ -29,11 +39,21 @@ const parseJWT = (token) => {
   }
 };
 
-const StreamHost = ({ actId, actTitle, onStopStream }) => {
+const StreamHost = ({
+  actId,
+  actTitle,
+  onStopStream,
+  startLocation,
+  destinationLocation,
+  routeCoordinates,
+}) => {
   console.log("StreamHost received props:", {
     actId,
     actTitle,
     typeof: typeof actId,
+    startLocation,
+    destinationLocation,
+    routeCoordinates,
   });
 
   const [isStreaming, setIsStreaming] = useState(false);
@@ -47,6 +67,9 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
 
   // Tasks modal state
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+
+  // Map modal state
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
 
@@ -906,6 +929,15 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
             >
               <MdChecklistRtl size={20} /> Tasks
             </button>
+            {(startLocation || destinationLocation || routeCoordinates) && (
+              <button
+                className={styles.button}
+                onClick={() => setIsMapModalOpen(true)}
+                title="View Route Map"
+              >
+                🗺️ Map
+              </button>
+            )}
           </div>
 
           <div className={styles.infoText}>
@@ -919,25 +951,44 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
           {/* Chat Section */}
           <div className={styles.chatSection}>
             <div className={styles.chatHeader}>
-              <h3>💬 Chat {isConnected ? "🟢" : "🔴"}</h3>
+              <h3>Stream Chat</h3>
+              <span className={styles.connectionStatus}>
+                {isConnected ? "Connected" : "Disconnected"}
+              </span>
             </div>
             <div className={styles.chatMessages}>
               {chatMessages && chatMessages.length > 0 ? (
                 chatMessages.map((message) => (
                   <div key={message.id} className={styles.chatMessage}>
-                    <strong>{message.user?.username || "User"}:</strong>{" "}
-                    {message.content || message.message}
+                    <div className={styles.messageHeader}>
+                      <span className={styles.messageUsername}>
+                        {message.user?.username || "User"}
+                      </span>
+                      <span className={styles.messageTime}>
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className={styles.messageText}>
+                      {message.content || message.message}
+                    </p>
                   </div>
                 ))
               ) : (
-                <div className={styles.noChatMessages}>No messages yet</div>
+                <div className={styles.noChatMessages}>
+                  <p>No messages yet. Start the conversation!</p>
+                </div>
               )}
             </div>
             <div className={styles.chatInputContainer}>
               <input
                 type="text"
                 className={styles.chatInput}
-                placeholder="Type a message..."
+                placeholder={
+                  isConnected ? "Type your message..." : "Connecting to chat..."
+                }
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -948,7 +999,7 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
                 onClick={handleSendMessage}
                 disabled={sending || !chatMessage.trim() || !isConnected}
               >
-                Send
+                <IoSend size={20} />
               </button>
             </div>
           </div>
@@ -1014,6 +1065,81 @@ const StreamHost = ({ actId, actTitle, onStopStream }) => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map Modal */}
+      {isMapModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsMapModalOpen(false)}
+        >
+          <div
+            className={styles.mapModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2>Route Map</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setIsMapModalOpen(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ height: "500px", width: "100%" }}>
+              <MapContainer
+                center={
+                  startLocation
+                    ? [startLocation.latitude, startLocation.longitude]
+                    : [55.751244, 37.618423]
+                }
+                zoom={13}
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  filter: "grayscale(100%) invert(1)",
+                }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {startLocation && (
+                  <Circle
+                    center={[startLocation.latitude, startLocation.longitude]}
+                    radius={50}
+                    pathOptions={{
+                      color: "black",
+                      fillColor: "black",
+                      fillOpacity: 0.8,
+                      weight: 2,
+                    }}
+                  />
+                )}
+                {routeCoordinates && (
+                  <Polyline
+                    positions={routeCoordinates}
+                    pathOptions={{
+                      color: "black",
+                      weight: 4,
+                      opacity: 0.8,
+                    }}
+                  />
+                )}
+                {destinationLocation && (
+                  <Marker
+                    position={[
+                      destinationLocation.latitude,
+                      destinationLocation.longitude,
+                    ]}
+                  />
+                )}
+              </MapContainer>
             </div>
           </div>
         </div>

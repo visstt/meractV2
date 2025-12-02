@@ -13,6 +13,9 @@ export const useAuthStore = create(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      location: null, // { latitude, longitude, timestamp }
+      routeDestination: null, // { latitude, longitude }
+      routeCoordinates: null, // array of [lat, lng] pairs
 
       // Действия
       setUser: (userData) => {
@@ -21,6 +24,40 @@ export const useAuthStore = create(
           token: userData.token || userData.accessToken,
           isAuthenticated: true,
           isLoading: false,
+        });
+      },
+
+      setLocation: (locationData) => {
+        set({
+          location: {
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            timestamp: Date.now(),
+          },
+        });
+      },
+
+      setRouteDestination: (destination) => {
+        set({
+          routeDestination: destination
+            ? {
+                latitude: destination.latitude,
+                longitude: destination.longitude,
+              }
+            : null,
+        });
+      },
+
+      setRouteCoordinates: (coordinates) => {
+        set({
+          routeCoordinates: coordinates ? [...coordinates] : null,
+        });
+      },
+
+      clearRoute: () => {
+        set({
+          routeDestination: null,
+          routeCoordinates: null,
         });
       },
 
@@ -95,6 +132,7 @@ export const useAuthStore = create(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        location: state.location,
       }),
       // Версия стора для миграций
       version: 1,
@@ -107,3 +145,4 @@ export const selectUser = (state) => state.user;
 export const selectIsAuthenticated = (state) => state.isAuthenticated;
 export const selectToken = (state) => state.token;
 export const selectIsLoading = (state) => state.isLoading;
+export const selectLocation = (state) => state.location;
