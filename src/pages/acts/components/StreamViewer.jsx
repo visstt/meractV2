@@ -57,9 +57,33 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const [startLocation, setStartLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
 
+  console.log("StreamViewer - Initial streamData:", streamData);
+
   // Use chat hook
   const actId = streamData?.id || channelName?.replace("act_", "");
   const { messages: chatMessages, sendMessage, sending } = useChat(actId);
+
+  const [actualStreamData, setActualStreamData] = useState(streamData);
+
+  // Load actual stream data from server
+  useEffect(() => {
+    const loadStreamData = async () => {
+      if (!actId) return;
+      
+      try {
+        console.log("StreamViewer - Loading stream data for actId:", actId);
+        const response = await api.get(`/act/find-by-id/${actId}`);
+        console.log("StreamViewer - Loaded stream data:", response.data);
+        setActualStreamData(response.data);
+      } catch (error) {
+        console.error("Error loading stream data:", error);
+        // Fallback to initial streamData if loading fails
+        setActualStreamData(streamData);
+      }
+    };
+
+    loadStreamData();
+  }, [actId, streamData]);
 
   // Исправляем иконки маркеров Leaflet
   useEffect(() => {
@@ -275,38 +299,38 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     }
   }, [isTasksModalOpen, actId]);
 
-  // Fetch route data from streamData
+  // Fetch route data from actualStreamData
   useEffect(() => {
     const fetchRouteData = async () => {
       console.log("StreamViewer - Fetching route data:", {
-        startLatitude: streamData?.startLatitude,
-        startLongitude: streamData?.startLongitude,
-        destinationLatitude: streamData?.destinationLatitude,
-        destinationLongitude: streamData?.destinationLongitude,
+        startLatitude: actualStreamData?.startLatitude,
+        startLongitude: actualStreamData?.startLongitude,
+        destinationLatitude: actualStreamData?.destinationLatitude,
+        destinationLongitude: actualStreamData?.destinationLongitude,
       });
 
-      if (streamData?.startLatitude && streamData?.startLongitude) {
+      if (actualStreamData?.startLatitude && actualStreamData?.startLongitude) {
         const start = {
-          latitude: streamData.startLatitude,
-          longitude: streamData.startLongitude,
+          latitude: actualStreamData.startLatitude,
+          longitude: actualStreamData.startLongitude,
         };
         setStartLocation(start);
         console.log("StreamViewer - Start location set:", start);
       }
 
-      if (streamData?.destinationLatitude && streamData?.destinationLongitude) {
+      if (actualStreamData?.destinationLatitude && actualStreamData?.destinationLongitude) {
         const destination = {
-          latitude: streamData.destinationLatitude,
-          longitude: streamData.destinationLongitude,
+          latitude: actualStreamData.destinationLatitude,
+          longitude: actualStreamData.destinationLongitude,
         };
         setDestinationLocation(destination);
         console.log("StreamViewer - Destination location set:", destination);
 
         // Build route if both start and destination exist
-        if (streamData?.startLatitude && streamData?.startLongitude) {
+        if (actualStreamData?.startLatitude && actualStreamData?.startLongitude) {
           try {
             const response = await fetch(
-              `https://router.project-osrm.org/route/v1/foot/${streamData.startLongitude},${streamData.startLatitude};${streamData.destinationLongitude},${streamData.destinationLatitude}?overview=full&geometries=geojson`,
+              `https://router.project-osrm.org/route/v1/foot/${actualStreamData.startLongitude},${actualStreamData.startLatitude};${actualStreamData.destinationLongitude},${actualStreamData.destinationLatitude}?overview=full&geometries=geojson`,
             );
             const data = await response.json();
 
@@ -328,10 +352,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       }
     };
 
-    if (showMap && streamData) {
+    if (actualStreamData) {
       fetchRouteData();
     }
-  }, [showMap, streamData]);
+  }, [actualStreamData]);
 
   const connectToStream = async (streamToken) => {
     if (!streamToken) {
@@ -646,6 +670,12 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       {/* Map Overlay */}
       {showMap && (
         <div className={styles.mapOverlay}>
+          {console.log("StreamViewer - Rendering Map with state:", {
+            startLocation,
+            destinationLocation,
+            routeCoordinatesLength: routeCoordinates?.length,
+            routeCoordinates: routeCoordinates
+          })}
           <button
             className={styles.closeMapButton}
             onClick={() => setShowMap(false)}
@@ -693,33 +723,34 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                 }}
               />
             )}
-            {routeCoordinates && (
-              <Polyline
-                positions={routeCoordinates}
-                pathOptions={{
-                  color: "black",
-                  weight: 4,
-                  opacity: 0.8,
-                }}
-              />
+            {routeCoordinates && routeCoordinates.length > 0 && (
+              <>
+                <Polyline
+                  positions={routeCoordinates}
+                  pathOptions={{
+                    color: "black",
+                    weight: 4,
+                    opacity: 0.8,
+                  }}
+                />
+                {console.log("StreamViewer - Rendering Polyline with", routeCoordinates.length, "points")}
+              </>
             )}
             {destinationLocation && (
-              <Marker
-                position={[
-                  destinationLocation.latitude,
-                  destinationLocation.longitude,
-                ]}
-              >
-                <Popup>
-                  <div style={{ color: "#000" }}>Destination</div>
-                </Popup>
-              </Marker>
+              <>
+                <Marker
+                  position={[
+                    destinationLocation.latitude,
+                    destinationLocation.longitude,
+                  ]}
+                >
+                  <Popup>
+                    <div style={{ color: "#000" }}>Destination</div>
+                  </Popup>
+                </Marker>
+                {console.log("StreamViewer - Rendering Destination Marker at", destinationLocation)}
+              </>
             )}
-            <Marker position={userPosition}>
-              <Popup>
-                <div style={{ color: "#000" }}>You are here</div>
-              </Popup>
-            </Marker>
           </MapContainer>
         </div>
       )}
