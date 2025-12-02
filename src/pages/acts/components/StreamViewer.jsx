@@ -69,7 +69,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   useEffect(() => {
     const loadStreamData = async () => {
       if (!actId) return;
-      
+
       try {
         console.log("StreamViewer - Loading stream data for actId:", actId);
         const response = await api.get(`/act/find-by-id/${actId}`);
@@ -318,7 +318,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         console.log("StreamViewer - Start location set:", start);
       }
 
-      if (actualStreamData?.destinationLatitude && actualStreamData?.destinationLongitude) {
+      if (
+        actualStreamData?.destinationLatitude &&
+        actualStreamData?.destinationLongitude
+      ) {
         const destination = {
           latitude: actualStreamData.destinationLatitude,
           longitude: actualStreamData.destinationLongitude,
@@ -327,7 +330,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         console.log("StreamViewer - Destination location set:", destination);
 
         // Build route if both start and destination exist
-        if (actualStreamData?.startLatitude && actualStreamData?.startLongitude) {
+        if (
+          actualStreamData?.startLatitude &&
+          actualStreamData?.startLongitude
+        ) {
           try {
             const response = await fetch(
               `https://router.project-osrm.org/route/v1/foot/${actualStreamData.startLongitude},${actualStreamData.startLatitude};${actualStreamData.destinationLongitude},${actualStreamData.destinationLatitude}?overview=full&geometries=geojson`,
@@ -674,7 +680,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
             startLocation,
             destinationLocation,
             routeCoordinatesLength: routeCoordinates?.length,
-            routeCoordinates: routeCoordinates
+            routeCoordinates: routeCoordinates,
           })}
           <button
             className={styles.closeMapButton}
@@ -733,7 +739,11 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                     opacity: 0.8,
                   }}
                 />
-                {console.log("StreamViewer - Rendering Polyline with", routeCoordinates.length, "points")}
+                {console.log(
+                  "StreamViewer - Rendering Polyline with",
+                  routeCoordinates.length,
+                  "points",
+                )}
               </>
             )}
             {destinationLocation && (
@@ -748,7 +758,10 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                     <div style={{ color: "#000" }}>Destination</div>
                   </Popup>
                 </Marker>
-                {console.log("StreamViewer - Rendering Destination Marker at", destinationLocation)}
+                {console.log(
+                  "StreamViewer - Rendering Destination Marker at",
+                  destinationLocation,
+                )}
               </>
             )}
           </MapContainer>
