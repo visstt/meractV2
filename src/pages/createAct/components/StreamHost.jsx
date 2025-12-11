@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { FaMap, FaMusic } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { MdCameraswitch, MdChecklistRtl } from "react-icons/md";
 import {
@@ -72,6 +73,10 @@ const StreamHost = ({
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+
+  // Music controls state
+  const [showMusicControls, setShowMusicControls] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(50);
 
   // Chat state
   const [chatMessage, setChatMessage] = useState("");
@@ -737,6 +742,17 @@ const StreamHost = ({
     }
   };
 
+  // Music volume handler
+  const handleVolumeChange = (e) => {
+    const newVolume = parseInt(e.target.value);
+    setMusicVolume(newVolume);
+    console.log("Volume changed to:", newVolume);
+    // Apply volume to music audio if playing
+    if (musicAudioRef.current) {
+      musicAudioRef.current.volume = newVolume / 100;
+    }
+  };
+
   // Chat handlers
   const handleSendMessage = () => {
     if (chatMessage.trim() && !sending) {
@@ -929,13 +945,25 @@ const StreamHost = ({
             >
               <MdChecklistRtl size={20} /> Tasks
             </button>
+          </div>
+
+          <div className={styles.controls}>
             {(startLocation || destinationLocation || routeCoordinates) && (
               <button
                 className={styles.button}
                 onClick={() => setIsMapModalOpen(true)}
                 title="View Route Map"
               >
-                🗺️ Map
+                <FaMap size={18} /> Map
+              </button>
+            )}
+            {actData?.musics && actData.musics.length > 0 && (
+              <button
+                className={styles.button}
+                onClick={() => setShowMusicControls(true)}
+                title="Music Controls"
+              >
+                <FaMusic size={18} /> Music
               </button>
             )}
           </div>
@@ -1140,6 +1168,70 @@ const StreamHost = ({
                   />
                 )}
               </MapContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Music Controls Modal */}
+      {showMusicControls && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowMusicControls(false)}
+        >
+          <div
+            className={styles.musicModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2>Music Controls</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowMusicControls(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.musicControls}>
+              <h3>Music Tracks</h3>
+              {actData?.musics && actData.musics.length > 0 ? (
+                <div className={styles.tracksList}>
+                  {actData.musics.map((music, index) => (
+                    <div
+                      key={music.id || index}
+                      className={`${styles.trackItem} ${
+                        currentMusicIndex === index ? styles.activeTrack : ""
+                      }`}
+                    >
+                      <span className={styles.trackNumber}>
+                        Track {index + 1}
+                      </span>
+                      <span className={styles.trackLength}>
+                        {music.length || "Unknown"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.noTracks}>No music tracks available</p>
+              )}
+
+              <div className={styles.volumeControl}>
+                <h3>Volume Control</h3>
+                <div className={styles.volumeSlider}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={musicVolume}
+                    onChange={handleVolumeChange}
+                    className={styles.slider}
+                  />
+                  <span className={styles.volumeValue}>{musicVolume}%</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
