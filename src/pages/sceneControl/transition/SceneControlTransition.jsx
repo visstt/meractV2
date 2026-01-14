@@ -1,13 +1,60 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+import { useSequelStore } from "../../../shared/stores/sequelStore";
+import {
+  createEffectPreview,
+  VIDEO_EFFECTS,
+} from "../../../shared/utils/videoEffects";
 import styles from "../SceneControl.module.css";
 
 export default function SceneControlTransition() {
+  const {
+    selectedEffect: effectFromStore,
+    setSelectedEffect: setEffectInStore,
+  } = useSequelStore();
+  const [selectedEffect, setSelectedEffect] = useState(
+    effectFromStore || VIDEO_EFFECTS.NONE.id,
+  );
+
   const navigate = useNavigate();
+  const previewCanvasRefs = useRef({});
 
   const handleGoBack = () => {
     navigate("/create-act");
   };
+
+  const handleEffectSelect = (effectId) => {
+    setSelectedEffect(effectId);
+    // Сохраняем выбранный effect в стор
+    setEffectInStore(effectId);
+    // Показываем уведомление
+    const effect = Object.values(VIDEO_EFFECTS).find((e) => e.id === effectId);
+    toast.success(`${effect?.name || "Effect"} selected successfully!`);
+  };
+
+  // Синхронизируем локальный стейт со store при монтировании
+  useEffect(() => {
+    if (effectFromStore) {
+      setSelectedEffect(effectFromStore);
+    } else {
+      // Если ничего не выбрано, выбираем "No Effect" по умолчанию
+      setSelectedEffect(VIDEO_EFFECTS.NONE.id);
+      setEffectInStore(VIDEO_EFFECTS.NONE.id);
+    }
+  }, [effectFromStore, setEffectInStore]);
+
+  // Создаем превью для всех эффектов
+  useEffect(() => {
+    Object.values(VIDEO_EFFECTS).forEach((effect) => {
+      const canvas = previewCanvasRefs.current[effect.id];
+      if (canvas) {
+        createEffectPreview(canvas, effect.id);
+      }
+    });
+  }, []);
 
   return (
     <div>
@@ -25,11 +72,32 @@ export default function SceneControlTransition() {
         </div>
         <div className="stripe2"></div>
         <div className={styles.content}>
-          <img
-            src="/images/samplePhoto.png"
-            alt=""
-            className={styles.samplePhoto}
-          />
+          {/* Превью выбранного эффекта */}
+          <div
+            style={{
+              width: "240px",
+              height: "400px",
+              position: "relative",
+              overflow: "hidden",
+              borderRadius: "10px",
+            }}
+          >
+            <canvas
+              ref={(el) => {
+                if (el && selectedEffect) {
+                  previewCanvasRefs.current[selectedEffect] = el;
+                  createEffectPreview(el, selectedEffect);
+                }
+              }}
+              width="240"
+              height="400"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
 
           <div className="btnRow">
             <button
@@ -69,67 +137,58 @@ export default function SceneControlTransition() {
 
           <div className={styles.wrapper}>
             <div className={styles.wrapper_header}>
-              <p>Transition</p>
+              <p>Video Effects</p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "60px 20px",
-                color: "#fff",
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  background: "rgba(255, 255, 255, 0.1)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: "12px",
-                  padding: "40px 30px",
-                  maxWidth: "400px",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
+            <div className={styles.wrapper_content}>
+              {Object.values(VIDEO_EFFECTS).map((effect) => (
                 <div
+                  key={effect.id}
+                  className={styles.wrapperContentItem}
+                  onClick={() => handleEffectSelect(effect.id)}
                   style={{
-                    fontSize: "48px",
-                    marginBottom: "20px",
-                  }}
-                ></div>
-                <h2
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: "600",
-                    marginBottom: "16px",
-                    color: "#fff",
+                    cursor: "pointer",
+                    position: "relative",
                   }}
                 >
-                  Under Development
-                </h2>
-                <p
-                  style={{
-                    fontSize: "16px",
-                    color: "#ccc",
-                    lineHeight: "1.5",
-                    marginBottom: "8px",
-                  }}
-                >
-                  This feature is currently being developed and will be
-                  available soon.
-                </p>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "#999",
-                    lineHeight: "1.4",
-                  }}
-                >
-                  Thank you for your patience!
-                </p>
-              </div>
+                  <canvas
+                    ref={(el) => {
+                      if (el) {
+                        previewCanvasRefs.current[effect.id] = el;
+                      }
+                    }}
+                    width="160"
+                    height="267"
+                    className={styles.wrapperContentImg}
+                    style={{
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      border:
+                        selectedEffect === effect.id
+                          ? "2px solid #3ABAFF"
+                          : "2px solid transparent",
+                      borderRadius: "5px",
+                      transition: "border-color 0.2s ease",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "10px",
+                      left: "0",
+                      right: "0",
+                      textAlign: "center",
+                      color: "white",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      textShadow: "0 1px 3px rgba(0,0,0,0.8)",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {effect.name}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

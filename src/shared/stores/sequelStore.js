@@ -20,6 +20,9 @@ export const useSequelStore = create(
       selectedMusicIds: [],
       selectedMusic: [],
 
+      // Effect (для transition эффектов) - храним ID эффекта
+      selectedEffect: null,
+
       // Устанавливаем выбранный сиквел
       setSelectedSequel: (sequel) => {
         set({
@@ -107,6 +110,20 @@ export const useSequelStore = create(
         });
       },
 
+      // Устанавливаем выбранный эффект
+      setSelectedEffect: (effectId) => {
+        set({
+          selectedEffect: effectId,
+        });
+      },
+
+      // Очищаем выбранный эффект
+      clearSelectedEffect: () => {
+        set({
+          selectedEffect: null,
+        });
+      },
+
       // Очищаем все выбранные элементы
       clearAll: () => {
         set({
@@ -118,6 +135,7 @@ export const useSequelStore = create(
           selectedOutro: null,
           selectedMusicIds: [],
           selectedMusic: [],
+          selectedEffect: null,
         });
       },
 
@@ -156,6 +174,12 @@ export const useSequelStore = create(
           music: state.selectedMusic,
         };
       },
+
+      // Получаем выбранный эффект
+      getSelectedEffect: () => {
+        const state = get();
+        return state.selectedEffect;
+      },
     }),
     {
       name: "meract-scene-store",
@@ -181,6 +205,7 @@ export const useSequelStore = create(
         selectedOutro: state.selectedOutro,
         selectedMusicIds: state.selectedMusicIds,
         selectedMusic: state.selectedMusic,
+        selectedEffect: state.selectedEffect,
       }),
     },
   ),
