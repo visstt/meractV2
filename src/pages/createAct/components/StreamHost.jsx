@@ -286,13 +286,13 @@ const StreamHost = ({
       }
       stopCameraPreview();
       stopBackgroundMusic();
-      
+
       // Cleanup effects processor
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
         effectsProcessorRef.current = null;
       }
-      
+
       // Cleanup source video element
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = null;
@@ -658,49 +658,52 @@ const StreamHost = ({
 
       // After intro, start camera stream with effects
       console.log("Creating camera track with facingMode:", facingMode);
-      
+
       // Создаем MediaStream из камеры напрямую
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facingMode },
-        audio: false // Аудио уже есть из audioTrack
+        audio: false, // Аудио уже есть из audioTrack
       });
-      
+
       const videoTrackNative = mediaStream.getVideoTracks()[0];
-      
+
       // Создаем скрытый video элемент для исходного видео
       if (!sourceVideoRef.current) {
-        sourceVideoRef.current = document.createElement('video');
-        sourceVideoRef.current.style.display = 'none';
+        sourceVideoRef.current = document.createElement("video");
+        sourceVideoRef.current.style.display = "none";
         sourceVideoRef.current.autoplay = true;
         sourceVideoRef.current.playsInline = true;
         document.body.appendChild(sourceVideoRef.current);
       }
-      
+
       sourceVideoRef.current.srcObject = mediaStream;
       await sourceVideoRef.current.play();
-      
+
       console.log("🎨 Applying video effects...");
-      
+
       // Создаем процессор эффектов
-      effectsProcessorRef.current = new VideoEffectsProcessor(sourceVideoRef.current, {
-        vignette: true,
-        colorFilter: 'warm', // 'warm', 'cold', 'none'
-        vignetteIntensity: 0.6,
-        colorIntensity: 0.3,
-      });
-      
+      effectsProcessorRef.current = new VideoEffectsProcessor(
+        sourceVideoRef.current,
+        {
+          vignette: true,
+          colorFilter: "warm", // 'warm', 'cold', 'none'
+          vignetteIntensity: 0.6,
+          colorIntensity: 0.3,
+        },
+      );
+
       // Запускаем обработку
       effectsProcessorRef.current.start();
-      
+
       // Получаем stream с эффектами
       const processedStream = effectsProcessorRef.current.getStream(30);
       const processedVideoTrack = processedStream.getVideoTracks()[0];
-      
+
       // Создаем Agora video track из обработанного stream
       const videoTrack = AgoraRTC.createCustomVideoTrack({
         mediaStreamTrack: processedVideoTrack,
       });
-      
+
       localTracksRef.current.videoTrack = videoTrack;
       localTracksRef.current.nativeVideoTrack = videoTrackNative; // Сохраняем нативный трек
 
@@ -735,12 +738,12 @@ const StreamHost = ({
       // Stop current video track
       localTracksRef.current.videoTrack.stop();
       localTracksRef.current.videoTrack.close();
-      
+
       // Остановить нативный трек
       if (localTracksRef.current.nativeVideoTrack) {
         localTracksRef.current.nativeVideoTrack.stop();
       }
-      
+
       // Остановить процессор эффектов
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
@@ -750,31 +753,34 @@ const StreamHost = ({
       console.log("Creating new camera stream with facingMode:", newFacingMode);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: newFacingMode },
-        audio: false
+        audio: false,
       });
-      
+
       const videoTrackNative = mediaStream.getVideoTracks()[0];
-      
+
       // Обновляем исходное видео
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = mediaStream;
         await sourceVideoRef.current.play();
       }
-      
+
       // Создаем новый процессор эффектов
-      effectsProcessorRef.current = new VideoEffectsProcessor(sourceVideoRef.current, {
-        vignette: true,
-        colorFilter: 'warm',
-        vignetteIntensity: 0.6,
-        colorIntensity: 0.3,
-      });
-      
+      effectsProcessorRef.current = new VideoEffectsProcessor(
+        sourceVideoRef.current,
+        {
+          vignette: true,
+          colorFilter: "warm",
+          vignetteIntensity: 0.6,
+          colorIntensity: 0.3,
+        },
+      );
+
       effectsProcessorRef.current.start();
-      
+
       // Получаем обработанный stream
       const processedStream = effectsProcessorRef.current.getStream(30);
       const processedVideoTrack = processedStream.getVideoTracks()[0];
-      
+
       // Создаем Agora track
       const newVideoTrack = AgoraRTC.createCustomVideoTrack({
         mediaStreamTrack: processedVideoTrack,
@@ -800,7 +806,11 @@ const StreamHost = ({
 
       // Update state
       setFacingMode(newFacingMode);
-      console.log("✅ Camera switched successfully to:", newFacingMode, "with effects");
+      console.log(
+        "✅ Camera switched successfully to:",
+        newFacingMode,
+        "with effects",
+      );
     } catch (err) {
       console.error("Error switching camera:", err);
       setError("Failed to switch camera: " + err.message);
@@ -893,19 +903,19 @@ const StreamHost = ({
         localTracksRef.current.videoTrack.stop();
         localTracksRef.current.videoTrack.close();
       }
-      
+
       // Stop native video track
       if (localTracksRef.current.nativeVideoTrack) {
         localTracksRef.current.nativeVideoTrack.stop();
         localTracksRef.current.nativeVideoTrack = null;
       }
-      
+
       // Stop effects processor
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
         effectsProcessorRef.current = null;
       }
-      
+
       // Remove and cleanup source video element
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = null;

@@ -5,8 +5,8 @@ import { toast } from "react-toastify";
 
 import { useSequelStore } from "../../../shared/stores/sequelStore";
 import {
-  createEffectPreview,
   VIDEO_EFFECTS,
+  createEffectPreview,
 } from "../../../shared/utils/videoEffects";
 import styles from "../SceneControl.module.css";
 
