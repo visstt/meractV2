@@ -77,7 +77,7 @@ export const useAuthStore = create(
 
       removeRoutePoint: (order) => {
         const currentPoints = get().routePoints;
-        const filteredPoints = currentPoints.filter(p => p.order !== order);
+        const filteredPoints = currentPoints.filter((p) => p.order !== order);
         // Переиндексируем точки после удаления
         const reindexedPoints = filteredPoints.map((p, index) => ({
           ...p,
