@@ -65,9 +65,13 @@ export default function CreateAct() {
     location,
     routeDestination,
     routeCoordinates,
+    routePoints,
     setRouteDestination,
     setRouteCoordinates,
+    addRoutePoint,
+    removeRoutePoint,
     clearRoute,
+    clearRoutePoints,
   } = useAuthStore();
 
   // Используем store для надежного хранения tasks
@@ -453,6 +457,29 @@ export default function CreateAct() {
       routeDestination ? true : false,
     );
 
+    // Формируем массив точек маршрута: начальная точка (order: 0) + выбранные точки
+    const formattedRoutePoints = [];
+    
+    // Добавляем начальную точку с order: 0 если есть геолокация
+    if (location) {
+      formattedRoutePoints.push({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        order: 0,
+      });
+    }
+    
+    // Добавляем остальные точки маршрута со сдвигом order на +1
+    if (routePoints && routePoints.length > 0) {
+      routePoints.forEach((point) => {
+        formattedRoutePoints.push({
+          latitude: point.latitude,
+          longitude: point.longitude,
+          order: point.order + 1, // Сдвигаем order на +1, так как 0 - это начальная точка
+        });
+      });
+    }
+
     const actData = {
       title: title.trim(),
       type: actType,
@@ -471,11 +498,14 @@ export default function CreateAct() {
       ...(location && {
         startLatitude: location.latitude,
         startLongitude: location.longitude,
-      }), // Добавляем стартовую позицию стримера из геолокации
+      }), // Добавляем стартовую позицию стримера из геолокации (для обратной совместимости)
       ...(routeDestination && {
         destinationLatitude: routeDestination.latitude,
         destinationLongitude: routeDestination.longitude,
-      }), // Добавляем точку назначения если выбрана метка на карте
+      }), // Добавляем точку назначения если выбрана метка на карте (для обратной совместимости)
+      ...(formattedRoutePoints.length > 0 && {
+        routePoints: formattedRoutePoints,
+      }), // Добавляем массив точек маршрута
     };
 
     console.log("Creating act with data:", actData);
@@ -969,7 +999,9 @@ export default function CreateAct() {
             onClick={() => setIsMapModalOpen(true)}
           >
             <img src="/icons/planet.svg" alt="" />
-            {routeDestination ? "Edit Route" : "Add Route"}
+            {routePoints.length > 0 
+              ? `Route (${routePoints.length} ${routePoints.length === 1 ? 'point' : 'points'})` 
+              : "Add Route"}
           </button>
         </div>
         <div className={styles.block}>
@@ -1281,7 +1313,7 @@ export default function CreateAct() {
               <p
                 style={{ marginBottom: "12px", fontSize: "13px", opacity: 0.8 }}
               >
-                Click on the map to select a location for your act
+                Click on the map to add route points. Point 0 is your starting location, then 1, 2, etc.
               </p>
               <div
                 style={{
@@ -1313,6 +1345,8 @@ export default function CreateAct() {
                     setRouteDestination={setRouteDestination}
                     setRouteCoordinates={setRouteCoordinates}
                     startLocation={location}
+                    addRoutePoint={addRoutePoint}
+                    routePoints={routePoints}
                   />
                   {location && (
                     <Circle
@@ -1336,43 +1370,103 @@ export default function CreateAct() {
                       }}
                     />
                   )}
-                  {routeDestination && (
-                    <Marker
-                      position={[
-                        routeDestination.latitude,
-                        routeDestination.longitude,
-                      ]}
-                    />
-                  )}
+                  {/* Отображаем все точки маршрута с номерами */}
+                  {routePoints.map((point, index) => {
+                    const icon = L.divIcon({
+                      className: 'custom-marker-icon',
+                      html: `<div style="
+                        background-color: black;
+                        color: white;
+                        border-radius: 50%;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: bold;
+                        font-size: 14px;
+                        border: 2px solid white;
+                      ">${point.order + 1}</div>`,
+                      iconSize: [32, 32],
+                      iconAnchor: [16, 16],
+                    });
+                    
+                    return (
+                      <Marker
+                        key={`point-${point.order}`}
+                        position={[point.latitude, point.longitude]}
+                        icon={icon}
+                      />
+                    );
+                  })}
                 </MapContainer>
               </div>
-              {routeDestination && (
+              
+              {/* Список точек маршрута */}
+              {routePoints.length > 0 && (
                 <div style={{ marginTop: "12px", fontSize: "12px" }}>
-                  <strong>Selected coordinates:</strong>
-                  <br />
-                  Latitude: {routeDestination.latitude.toFixed(6)}
-                  <br />
-                  Longitude: {routeDestination.longitude.toFixed(6)}
+                  <strong>Route Points ({routePoints.length}):</strong>
+                  <div style={{ 
+                    maxHeight: "120px", 
+                    overflowY: "auto", 
+                    marginTop: "8px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "4px",
+                    padding: "8px"
+                  }}>
+                    {routePoints.map((point) => (
+                      <div key={point.order} style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "4px 0",
+                        borderBottom: point.order < routePoints.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none"
+                      }}>
+                        <span>
+                          <strong>Point {point.order + 1}:</strong> {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRoutePoint(point.order);
+                            toast.info(`Point ${point.order + 1} removed`);
+                          }}
+                          style={{
+                            background: "rgba(255,0,0,0.2)",
+                            border: "1px solid rgba(255,0,0,0.4)",
+                            borderRadius: "4px",
+                            padding: "2px 8px",
+                            cursor: "pointer",
+                            fontSize: "11px",
+                            color: "white"
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
                 <button
                   onClick={() => {
                     clearRoute();
+                    clearRoutePoints();
                     setIsMapModalOpen(false);
                   }}
                   className={styles.cancelButton}
                   style={{ fontSize: "13px", padding: "8px 16px" }}
                 >
-                  Clear Location
+                  Clear All Points
                 </button>
                 <button
                   onClick={() => setIsMapModalOpen(false)}
                   className={styles.saveButton}
-                  disabled={!routeDestination}
+                  disabled={routePoints.length === 0}
                   style={{ fontSize: "13px", padding: "8px 16px" }}
                 >
-                  Confirm Location
+                  Confirm Route ({routePoints.length} {routePoints.length === 1 ? 'point' : 'points'})
                 </button>
               </div>
             </div>
@@ -1388,6 +1482,8 @@ function LocationSelector({
   setRouteDestination,
   setRouteCoordinates,
   startLocation,
+  addRoutePoint,
+  routePoints,
 }) {
   useMapEvents({
     async click(e) {
@@ -1395,15 +1491,32 @@ function LocationSelector({
         latitude: e.latlng.lat,
         longitude: e.latlng.lng,
       };
-      console.log("Map clicked, destination set to:", destination);
+      console.log("Map clicked, adding route point:", destination);
+      
+      // Добавляем точку в массив routePoints
+      addRoutePoint(destination);
+      
+      // Также сохраняем как routeDestination для обратной совместимости
       setRouteDestination(destination);
       console.log("Start location:", startLocation);
 
-      // Получаем маршрут от точки старта до выбранной точки
+      // Получаем маршрут через все точки
       if (startLocation) {
         try {
+          // Формируем список всех точек: начальная + все добавленные + новая
+          const allPoints = [
+            startLocation,
+            ...routePoints.map(p => ({ latitude: p.latitude, longitude: p.longitude })),
+            destination
+          ];
+          
+          // Формируем строку координат для OSRM API
+          const coordsString = allPoints
+            .map(p => `${p.longitude},${p.latitude}`)
+            .join(';');
+          
           const response = await fetch(
-            `https://router.project-osrm.org/route/v1/foot/${startLocation.longitude},${startLocation.latitude};${destination.longitude},${destination.latitude}?overview=full&geometries=geojson`,
+            `https://router.project-osrm.org/route/v1/foot/${coordsString}?overview=full&geometries=geojson`,
           );
           const data = await response.json();
 
@@ -1412,7 +1525,7 @@ function LocationSelector({
               (coord) => [coord[1], coord[0]],
             );
             setRouteCoordinates(coordinates);
-            toast.success("Route successfully built!");
+            toast.success(`Route point ${routePoints.length + 1} added!`);
           }
         } catch (error) {
           console.error("Error fetching route:", error);

@@ -16,6 +16,7 @@ export const useAuthStore = create(
       location: null, // { latitude, longitude, timestamp }
       routeDestination: null, // { latitude, longitude }
       routeCoordinates: null, // array of [lat, lng] pairs
+      routePoints: [], // array of { latitude, longitude, order }
 
       // Действия
       setUser: (userData) => {
@@ -58,6 +59,38 @@ export const useAuthStore = create(
         set({
           routeDestination: null,
           routeCoordinates: null,
+          routePoints: [],
+        });
+      },
+
+      addRoutePoint: (point) => {
+        const currentPoints = get().routePoints;
+        const newPoint = {
+          latitude: point.latitude,
+          longitude: point.longitude,
+          order: currentPoints.length, // Автоматически присваиваем порядковый номер
+        };
+        set({
+          routePoints: [...currentPoints, newPoint],
+        });
+      },
+
+      removeRoutePoint: (order) => {
+        const currentPoints = get().routePoints;
+        const filteredPoints = currentPoints.filter(p => p.order !== order);
+        // Переиндексируем точки после удаления
+        const reindexedPoints = filteredPoints.map((p, index) => ({
+          ...p,
+          order: index,
+        }));
+        set({
+          routePoints: reindexedPoints,
+        });
+      },
+
+      clearRoutePoints: () => {
+        set({
+          routePoints: [],
         });
       },
 
