@@ -10,6 +10,7 @@ import {
   Circle,
   MapContainer,
   Marker,
+  Popup,
   Polyline,
   TileLayer,
 } from "react-leaflet";
@@ -72,6 +73,15 @@ const StreamHost = ({
 
   // Map modal state
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [localStartLocation, setLocalStartLocation] = useState(
+    startLocation || null,
+  );
+  const [localDestinationLocation, setLocalDestinationLocation] = useState(
+    destinationLocation || null,
+  );
+  const [localRouteCoordinates, setLocalRouteCoordinates] = useState(
+    routeCoordinates || null,
+  );
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
 
@@ -303,6 +313,94 @@ const StreamHost = ({
       }
     };
   }, [actId, channelName, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Build route data from `actData` when available. Prefer explicit `routePoints`.
+  useEffect(() => {
+    if (!actData) return;
+
+    // Derive start/destination if not provided via props
+    if (!startLocation && actData.startLatitude && actData.startLongitude) {
+      setLocalStartLocation({
+        latitude: actData.startLatitude,
+        longitude: actData.startLongitude,
+      });
+    } else if (startLocation) {
+      setLocalStartLocation(startLocation);
+    }
+
+    // Destination is the LAST point from routePoints array
+    if (actData.routePoints && Array.isArray(actData.routePoints) && actData.routePoints.length > 0) {
+      const sorted = [...actData.routePoints].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const lastPoint = sorted[sorted.length - 1];
+      setLocalDestinationLocation({
+        latitude: lastPoint.latitude,
+        longitude: lastPoint.longitude,
+      });
+
+      // Build route: start → routePoints → destination
+      if (actData.startLatitude && actData.startLongitude) {
+        (async () => {
+          try {
+            // Build waypoints string for OSRM: start;point1;point2;...;lastPoint
+            const waypoints = [];
+            waypoints.push(`${actData.startLongitude},${actData.startLatitude}`);
+            
+            sorted.forEach((p) => {
+              waypoints.push(`${p.longitude},${p.latitude}`);
+            });
+
+            const waypointsString = waypoints.join(';');
+            
+            const response = await fetch(
+              `https://router.project-osrm.org/route/v1/foot/${waypointsString}?overview=full&geometries=geojson`,
+            );
+            const data = await response.json();
+            if (data.routes && data.routes[0]) {
+              const coords = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+              setLocalRouteCoordinates(coords);
+            }
+          } catch (err) {
+            console.error("Error fetching OSRM route through all points:", err);
+          }
+        })();
+      }
+    } else if (
+      !destinationLocation &&
+      actData.destinationLatitude &&
+      actData.destinationLongitude
+    ) {
+      // Fallback to original destination if no routePoints
+      setLocalDestinationLocation({
+        latitude: actData.destinationLatitude,
+        longitude: actData.destinationLongitude,
+      });
+    } else if (destinationLocation) {
+      setLocalDestinationLocation(destinationLocation);
+    }
+
+    // Fallback to OSRM route if no explicit routePoints
+    if (
+      !(actData.routePoints && Array.isArray(actData.routePoints) && actData.routePoints.length > 0) &&
+      (actData.startLatitude && actData.startLongitude) &&
+      (actData.destinationLatitude && actData.destinationLongitude)
+    ) {
+      // Fallback to OSRM route if no explicit routePoints
+      (async () => {
+        try {
+          const response = await fetch(
+            `https://router.project-osrm.org/route/v1/foot/${actData.startLongitude},${actData.startLatitude};${actData.destinationLongitude},${actData.destinationLatitude}?overview=full&geometries=geojson`,
+          );
+          const data = await response.json();
+          if (data.routes && data.routes[0]) {
+            const coords = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+            setLocalRouteCoordinates(coords);
+          }
+        } catch (err) {
+          console.error("Error fetching OSRM route:", err);
+        }
+      })();
+    }
+  }, [actData, startLocation, destinationLocation]);
 
   // Function to start camera preview
   const startCameraPreview = async () => {
@@ -1251,8 +1349,8 @@ const StreamHost = ({
             <div style={{ height: "500px", width: "100%" }}>
               <MapContainer
                 center={
-                  startLocation
-                    ? [startLocation.latitude, startLocation.longitude]
+                  localStartLocation
+                    ? [localStartLocation.latitude, localStartLocation.longitude]
                     : [55.751244, 37.618423]
                 }
                 zoom={13}
@@ -1266,9 +1364,9 @@ const StreamHost = ({
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {startLocation && (
+                {localStartLocation && (
                   <Circle
-                    center={[startLocation.latitude, startLocation.longitude]}
+                    center={[localStartLocation.latitude, localStartLocation.longitude]}
                     radius={50}
                     pathOptions={{
                       color: "black",
@@ -1278,9 +1376,9 @@ const StreamHost = ({
                     }}
                   />
                 )}
-                {routeCoordinates && (
+                {localRouteCoordinates && (
                   <Polyline
-                    positions={routeCoordinates}
+                    positions={localRouteCoordinates}
                     pathOptions={{
                       color: "black",
                       weight: 4,
@@ -1288,14 +1386,47 @@ const StreamHost = ({
                     }}
                   />
                 )}
-                {destinationLocation && (
-                  <Marker
-                    position={[
-                      destinationLocation.latitude,
-                      destinationLocation.longitude,
-                    ]}
-                  />
-                )}
+                {/* Render route points with numbered markers */}
+                {actData?.routePoints && actData.routePoints.length > 0 &&
+                  actData.routePoints
+                    .slice()
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map((pt) => {
+                      // Skip if this point matches start location (to avoid duplicate)
+                      const isStartPoint =
+                        localStartLocation &&
+                        Math.abs(pt.latitude - localStartLocation.latitude) < 0.0001 &&
+                        Math.abs(pt.longitude - localStartLocation.longitude) < 0.0001;
+
+                      if (isStartPoint) return null;
+
+                      const icon = L.divIcon({
+                        className: "custom-marker-icon",
+                        html: `<div style="
+                          background-color: black;
+                          color: white;
+                          border-radius: 50%;
+                          width: 32px;
+                          height: 32px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font-weight: bold;
+                          font-size: 14px;
+                          border: 2px solid white;
+                        ">${(pt.order != null ? pt.order : 0) + 1}</div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                      });
+
+                      return (
+                        <Marker
+                          key={`point-${pt.id}`}
+                          position={[pt.latitude, pt.longitude]}
+                          icon={icon}
+                        />
+                      );
+                    })}
               </MapContainer>
             </div>
           </div>

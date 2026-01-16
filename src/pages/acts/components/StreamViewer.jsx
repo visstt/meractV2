@@ -318,18 +318,68 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         console.log("StreamViewer - Start location set:", start);
       }
 
+      // Destination is the LAST point from routePoints array
       if (
+        actualStreamData?.routePoints &&
+        Array.isArray(actualStreamData.routePoints) &&
+        actualStreamData.routePoints.length > 0
+      ) {
+        const sorted = [...actualStreamData.routePoints].sort(
+          (a, b) => (a.order || 0) - (b.order || 0),
+        );
+        const lastPoint = sorted[sorted.length - 1];
+        const destination = {
+          latitude: lastPoint.latitude,
+          longitude: lastPoint.longitude,
+        };
+        setDestinationLocation(destination);
+        console.log("StreamViewer - Destination location set (last routePoint):", destination);
+
+        // Build route through all points: start → routePoints → destination
+        if (actualStreamData?.startLatitude && actualStreamData?.startLongitude) {
+          try {
+            // Build waypoints string for OSRM: start;point1;point2;...;lastPoint
+            const waypoints = [];
+            waypoints.push(`${actualStreamData.startLongitude},${actualStreamData.startLatitude}`);
+            
+            sorted.forEach((p) => {
+              waypoints.push(`${p.longitude},${p.latitude}`);
+            });
+
+            const waypointsString = waypoints.join(';');
+            
+            const response = await fetch(
+              `https://router.project-osrm.org/route/v1/foot/${waypointsString}?overview=full&geometries=geojson`,
+            );
+            const data = await response.json();
+
+            if (data.routes && data.routes[0]) {
+              const coordinates = data.routes[0].geometry.coordinates.map(
+                (coord) => [coord[1], coord[0]],
+              );
+              setRouteCoordinates(coordinates);
+              console.log(
+                "StreamViewer - Route coordinates set through all points:",
+                coordinates.length,
+                "points",
+              );
+            }
+          } catch (error) {
+            console.error("Error fetching route through all points:", error);
+          }
+        }
+      } else if (
         actualStreamData?.destinationLatitude &&
         actualStreamData?.destinationLongitude
       ) {
+        // Fallback to original destination if no routePoints
         const destination = {
           latitude: actualStreamData.destinationLatitude,
           longitude: actualStreamData.destinationLongitude,
         };
         setDestinationLocation(destination);
         console.log("StreamViewer - Destination location set:", destination);
-
-        // Build route if both start and destination exist
+        // Build route via OSRM if explicit routePoints are not provided
         if (
           actualStreamData?.startLatitude &&
           actualStreamData?.startLongitude
@@ -746,24 +796,48 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                 )}
               </>
             )}
-            {destinationLocation && (
-              <>
-                <Marker
-                  position={[
-                    destinationLocation.latitude,
-                    destinationLocation.longitude,
-                  ]}
-                >
-                  <Popup>
-                    <div style={{ color: "#000" }}>Destination</div>
-                  </Popup>
-                </Marker>
-                {console.log(
-                  "StreamViewer - Rendering Destination Marker at",
-                  destinationLocation,
-                )}
-              </>
-            )}
+            {/* Render route points with numbered markers */}
+            {actualStreamData?.routePoints &&
+              actualStreamData.routePoints.length > 0 &&
+              actualStreamData.routePoints
+                .slice()
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map((pt) => {
+                  // Skip if this point matches start location (to avoid duplicate)
+                  const isStartPoint =
+                    startLocation &&
+                    Math.abs(pt.latitude - startLocation.latitude) < 0.0001 &&
+                    Math.abs(pt.longitude - startLocation.longitude) < 0.0001;
+
+                  if (isStartPoint) return null;
+
+                  const icon = L.divIcon({
+                    className: "custom-marker-icon",
+                    html: `<div style="
+                      background-color: black;
+                      color: white;
+                      border-radius: 50%;
+                      width: 32px;
+                      height: 32px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-weight: bold;
+                      font-size: 14px;
+                      border: 2px solid white;
+                    ">${(pt.order != null ? pt.order : 0) + 1}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                  });
+
+                  return (
+                    <Marker
+                      key={`point-${pt.id}`}
+                      position={[pt.latitude, pt.longitude]}
+                      icon={icon}
+                    />
+                  );
+                })}
           </MapContainer>
         </div>
       )}
