@@ -1,12 +1,185 @@
-# React + Vite
+# Meract
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Интерактивная стриминговая платформа с прямыми трансляциями, чатом в реальном времени, достижениями, гильдиями и созданием маршрутов на основе геолокации.
 
-Currently, two official plugins are available:
+## Быстрый старт
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Требования
 
-## Expanding the ESLint configuration
+- Node.js (v16+)
+- Запущенный backend API сервер
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Установка
+
+```bash
+npm install
+# или
+yarn install
+```
+
+### Настройка окружения
+
+Создайте файл `.env` в корневой директории:
+
+```env
+VITE_API_URL=http://localhost:3000
+VITE_AGORA_APP_ID=your_agora_app_id
+```
+
+### Запуск dev-сервера
+
+```bash
+npm run dev
+# или
+yarn dev
+```
+
+Приложение будет доступно по адресу `http://localhost:5173`
+
+### Сборка для продакшена
+
+```bash
+npm run build
+npm run preview
+```
+
+## Архитектура проекта
+
+### Технологический стек
+
+- **React 19** - UI фреймворк
+- **Vite** - Инструмент сборки и dev-сервер
+- **React Router** - Клиентская маршрутизация
+- **Zustand** - Управление состоянием
+- **Axios** - HTTP клиент
+- **Socket.io** - Связь в реальном времени
+- **Agora SDK** - Прямые трансляции
+- **Leaflet** - Карты и геолокация
+- **React Toastify** - Уведомления
+
+### Структура папок
+
+```
+src/
+├── app/                      # Инициализация приложения и маршрутизация
+│   ├── App.jsx              # Главный компонент
+│   └── router/              # Конфигурация маршрутов
+│
+├── features/                # Модули функциональности
+│   └── Auth/                # Аутентификация
+│       ├── Login/
+│       ├── registration/
+│       ├── forgotPassword/
+│       └── RequireAuth.jsx  # Обертка для защищенных маршрутов
+│
+├── pages/                   # Компоненты страниц
+│   ├── acts/                # Список ACT и прямые трансляции
+│   ├── createAct/           # Создание нового ACT с маршрутами/задачами
+│   ├── stream/              # Просмотр стрима
+│   ├── streamHost/          # Вещание стрима
+│   ├── guilds/              # Гильдии и чат гильдий
+│   ├── achievements/        # Достижения пользователя
+│   ├── rank/                # Рейтинг пользователей
+│   └── sceneControl/        # Управление сценами (интро/аутро/музыка)
+│
+├── shared/                  # Общие ресурсы
+│   ├── api/                 # API клиенты
+│   │   ├── api.js          # Axios инстанс с интерцепторами
+│   │   └── achievementApi.js
+│   ├── stores/              # Zustand хранилища
+│   │   ├── authStore.js    # Авторизация + геолокация
+│   │   ├── actsStore.js    # Состояние ACT
+│   │   ├── achievementStore.js
+│   │   └── sequelStore.js
+│   ├── ui/                  # Переиспользуемые UI компоненты
+│   │   ├── NavBar/
+│   │   ├── AchievementNotification/
+│   │   └── CustomSelect/
+│   └── utils/               # Утилиты
+│       ├── achievementSocket.js  # WebSocket для достижений
+│       ├── streamManager.js      # Управление стримами
+│       └── videoEffects.js       # Видео фильтры/эффекты
+│
+└── main.jsx                 # Точка входа в приложение
+```
+
+## Основные функции
+
+### Аутентификация
+
+- Вход и регистрация через email/пароль
+- Интеграция с Google OAuth
+- Механизм обновления JWT токенов
+- Защищенные маршруты через `RequireAuth`
+
+### ACT (активности)
+
+- Создание ACT с названием, типом (одиночный/мульти герой) и форматом
+- Прямые трансляции через Agora SDK
+- Чат в реальном времени во время стримов
+- Управление задачами для каждого ACT
+- Планирование маршрута с несколькими точками
+- Методы выбора Hero/Navigator (голосование, ставки, вручную)
+
+### Стриминг
+
+- Вещание стримов с видео/аудио
+- Режим зрителя с чатом в реальном времени
+- Управление сценами (интро, аутро, музыка, переходы)
+- Видео эффекты и фильтры
+
+### Гильдии
+
+- Создание и вступление в гильдии
+- Чат гильдии в реальном времени через Socket.io
+- Управление участниками гильдии
+
+### Достижения
+
+- Уведомления о достижениях в реальном времени через WebSocket
+- Персональные и гильдийские достижения
+- Панель наград достижений
+
+### Геолокация
+
+- Отслеживание текущего местоположения
+- Создание маршрута с несколькими точками
+- Интерактивная карта (Leaflet + OpenStreetMap)
+- Визуализация маршрута через OSRM
+
+## Управление состоянием
+
+### Zustand хранилища
+
+- **authStore** - Аутентификация пользователя, токены, геолокация и маршруты
+- **actsStore** - Список ACT, задачи и состояние форм
+- **achievementStore** - Достижения и уведомления
+- **sequelStore** - Выбор сиквелов/сцен (интро, аутро, музыка)
+
+## Интеграция с API
+
+### HTTP (Axios)
+
+- Автоматическое добавление JWT токена
+- Автоматическое обновление токена при 401
+- Базовый URL из `VITE_API_URL`
+
+### WebSocket (Socket.io)
+
+- Уведомления о достижениях (`achievementSocket.js`)
+- Чат гильдии (`GuildDetailPage.jsx`)
+- Чат ACT во время стримов (`useChat.js`)
+
+## Заметки для разработчиков
+
+- **Service Worker**: Поддержка PWA через `service-worker.js`
+- **Manifest**: PWA манифест в `public/manifest.json`
+- **Icons**: UI иконки в `public/icons/`
+- **Password Protection**: Опциональная парольная защита в разработке
+
+## Скрипты
+
+- `npm run dev` - Запустить dev-сервер
+- `npm run build` - Собрать для продакшена
+- `npm run preview` - Предпросмотр production сборки
+- `npm run lint` - Запустить ESLint
