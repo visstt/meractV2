@@ -7,7 +7,6 @@ import { useAuthStore } from "../../shared/stores/authStore";
 import NavBar from "../../shared/ui/NavBar/NavBar";
 import styles from "./RankPage.module.css";
 
-// Функция для декодирования JWT токена
 const decodeToken = (token) => {
   try {
     const base64Url = token.split(".")[1];
@@ -33,45 +32,42 @@ export default function RankPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🔍 RankPage useEffect triggered");
-    console.log("👤 Current user:", user);
-    console.log("🔑 Token:", token);
+    console.log("RankPage useEffect triggered");
+    console.log("Current user:", user);
+    console.log("Token:", token);
 
     const fetchUserRanks = async () => {
-      // Получаем ID пользователя из user.id или декодируем из токена
       let userId = user?.id;
 
       if (!userId && token) {
-        console.log("📝 Decoding token to get user ID");
+        console.log("Decoding token to get user ID");
         const decoded = decodeToken(token);
-        console.log("🔓 Decoded token:", decoded);
+        console.log("Decoded token:", decoded);
         userId = decoded?.sub;
       }
 
       if (!userId) {
-        console.warn("⚠️ No user ID found, skipping fetch");
+        console.warn("No user ID found, skipping fetch");
         setLoading(false);
         return;
       }
 
-      console.log("📡 Fetching ranks for user ID:", userId);
+      console.log("Fetching ranks for user ID:", userId);
 
       try {
         setLoading(true);
-        console.log("🚀 Making API request to:", `/rank/user/${userId}`);
         const response = await api.get(`/rank/user/${userId}`);
-        console.log("✅ API response received:", response);
-        console.log("📦 Raw ranks data:", response.data);
+        console.log("API response received:", response);
+        console.log("Raw ranks data:", response.data);
 
-        // API возвращает массив объектов с вложенным rank
         const ranksData = response.data.map((item) => item.rank);
-        console.log("✨ Processed ranks:", ranksData);
+        console.log("Processed ranks:", ranksData);
         setRanks(ranksData);
       } catch (error) {
-        console.error("❌ Error fetching user ranks:", error);
+        console.error("Error fetching user ranks:", error);
         console.error("Error details:", error.response?.data || error.message);
       } finally {
-        console.log("🏁 Fetch completed");
+        console.log("Fetch completed");
         setLoading(false);
       }
     };

@@ -13,77 +13,70 @@ const useChat = (actId) => {
 
   const socketRef = useRef(null);
 
-  // Подключение к WebSocket
   useEffect(() => {
     if (!actId) return;
 
-    console.log(`🔌 Подключение к чату для акта ${actId}...`);
+    console.log(`Подключение к чату для акта ${actId}...`);
 
-    // Создаем подключение напрямую к namespace /chat
     const socket = io(
       `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/chat`,
       {
         path: "/socket.io",
-        withCredentials: true, // ОБЯЗАТЕЛЬНО для отправки httpOnly cookies
+        withCredentials: true, 
         transports: ["websocket", "polling"],
       },
     );
 
     socketRef.current = socket;
 
-    // Обработчики событий
     socket.on("connect", () => {
-      console.log("✅ Подключен к чату актов, socket.id:", socket.id);
+      console.log("Подключен к чату актов, socket.id:", socket.id);
       setIsConnected(true);
       setError(null);
 
-      // Подписываемся на комнату акта
-      console.log(`📍 Подписка на комнату акта ${actId}...`);
+      console.log(`Подписка на комнату акта ${actId}...`);
 
       // ВАЖНО: Сервер подписывает пользователя при отправке sendMessage
       // Отправляем техническое сообщение с пробелом для активации подписки
       // Оно будет отфильтровано при отображении
       setTimeout(() => {
         console.log(
-          "📡 Отправка технического сообщения для активации подписки...",
+          "Отправка технического сообщения для активации подписки...",
         );
         socket.emit("sendMessage", {
           actId: parseInt(actId),
           content: " ", // Пробел - будет отфильтрован при отображении
         });
         console.log(
-          "✅ Техническое сообщение отправлено (не будет показано пользователям)",
+          "Техническое сообщение отправлено (не будет показано пользователям)",
         );
       }, 100);
     });
 
     socket.on("connect_error", (err) => {
-      console.error("❌ Ошибка подключения к чату:", err.message);
+      console.error("Ошибка подключения к чату:", err.message);
       setError("Failed to connect to chat");
       setIsConnected(false);
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("🔌 Отключен от чата, причина:", reason);
+      console.log("Отключен от чата, причина:", reason);
       setIsConnected(false);
     });
 
-    // Получение нового сообщения
     socket.on("newMessage", (message) => {
-      console.log("📨 Новое сообщение получено через WebSocket:", message);
+      console.log("Новое сообщение получено через WebSocket:", message);
 
-      // Игнорируем пустые сообщения (технические)
       const content = message.content || message.message || "";
       if (!content.trim()) {
-        console.log("⚠️ Пропускаем пустое сообщение (техническое)");
+        console.log("Пропускаем пустое сообщение (техническое)");
         return;
       }
 
       setMessages((prevMessages) => {
-        // Проверяем, не существует ли уже это сообщение (по id)
         const messageExists = prevMessages.some((msg) => msg.id === message.id);
         if (messageExists) {
-          console.log("⚠️ Сообщение уже существует, пропускаем:", message.id);
+          console.log("Сообщение уже существует, пропускаем:", message.id);
           return prevMessages;
         }
 
@@ -97,14 +90,12 @@ const useChat = (actId) => {
       });
     });
 
-    // Добавим обработку всех событий для отладки
     socket.onAny((eventName, ...args) => {
-      console.log(`🔔 Socket event: ${eventName}`, args);
+      console.log(`Socket event: ${eventName}`, args);
     });
 
-    // Очистка при размонтировании
     return () => {
-      console.log("🔌 Отключение от чата для акта", actId);
+      console.log("Отключение от чата для акта", actId);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -119,7 +110,7 @@ const useChat = (actId) => {
         setLoading(true);
         setError(null);
 
-        console.log(`📥 Загрузка начальных сообщений для акта ${actId}...`);
+        console.log(`Загрузка начальных сообщений для акта ${actId}...`);
         const response = await api.get(`/chat/${actId}/messages`, {
           params: {
             limit,
@@ -127,14 +118,13 @@ const useChat = (actId) => {
           },
         });
 
-        // Фильтруем пустые сообщения (технические)
         const filteredMessages = response.data.filter((msg) => {
           const content = msg.content || msg.message || "";
           return content.trim() !== "";
         });
 
         console.log(
-          `✅ Загружено ${filteredMessages.length} сообщений из истории (из ${response.data.length} всего)`,
+          `Загружено ${filteredMessages.length} сообщений из истории (из ${response.data.length} всего)`,
         );
         setMessages(filteredMessages);
       } catch (err) {
@@ -152,20 +142,20 @@ const useChat = (actId) => {
     (message) => {
       if (!actId || !message?.trim()) {
         console.warn(
-          "⚠️ Невозможно отправить сообщение: пустое сообщение или нет actId",
+          "Невозможно отправить сообщение: пустое сообщение или нет actId",
         );
         return;
       }
 
       if (!socketRef.current) {
         console.warn(
-          "⚠️ Невозможно отправить сообщение: сокет не инициализирован",
+          "Невозможно отправить сообщение: сокет не инициализирован",
         );
         return;
       }
 
       if (!isConnected) {
-        console.warn("⚠️ Невозможно отправить сообщение: сокет не подключен");
+        console.warn("Невозможно отправить сообщение: сокет не подключен");
         return;
       }
 
@@ -178,22 +168,20 @@ const useChat = (actId) => {
           content: message.trim(),
         };
 
-        console.log("📤 Отправка сообщения через WebSocket:", payload);
+        console.log("Отправка сообщения через WebSocket:", payload);
 
-        // Отправляем через WebSocket
         socketRef.current.emit("sendMessage", payload);
 
-        console.log("✅ Сообщение отправлено через WebSocket:", message);
-        console.log("⏳ Ожидаем событие newMessage от сервера...");
+        console.log("Сообщение отправлено через WebSocket:", message);
+        console.log("Ожидаем событие newMessage от сервера...");
 
         // Добавляем таймер для проверки - если через 2 секунды не пришло событие,
         // перезагружаем сообщения через HTTP
         setTimeout(() => {
-          console.log("⏰ Прошло 2 секунды, проверяем получение сообщения...");
-          // Можно перезагрузить сообщения если нужно
+          console.log("Прошло 2 секунды, проверяем получение сообщения...");
         }, 2000);
       } catch (err) {
-        console.error("❌ Error sending message:", err);
+        console.error("Error sending message:", err);
         setError("Failed to send message");
       } finally {
         setSending(false);
@@ -217,7 +205,6 @@ const useChat = (actId) => {
           },
         });
 
-        // Фильтруем пустые сообщения и добавляем старые сообщения
         const filteredMessages = response.data.filter((msg) => {
           const content = msg.content || msg.message || "";
           return content.trim() !== "";
@@ -234,16 +221,13 @@ const useChat = (actId) => {
     [actId],
   );
 
-  // Initial load - загружаем только один раз при изменении actId
   useEffect(() => {
     if (actId) {
       console.log(`🔄 Загрузка истории сообщений для акта ${actId}`);
       fetchMessages();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actId]); // Только actId, не fetchMessages!
+  }, [actId]); 
 
-  // Fallback: Если WebSocket не работает, периодически обновляем через HTTP
   useEffect(() => {
     if (!actId || !isConnected) return;
 
@@ -252,12 +236,10 @@ const useChat = (actId) => {
     );
 
     const interval = setInterval(() => {
-      // Получаем последний ID сообщения
       if (messages.length > 0) {
         const lastMessageId = messages[messages.length - 1].id;
         console.log(`🔍 Проверка новых сообщений после ID ${lastMessageId}...`);
 
-        // Загружаем сообщения и проверяем, есть ли новые
         api
           .get(`/chat/${actId}/messages`, {
             params: { limit: 10, offset: 0 },
@@ -266,7 +248,7 @@ const useChat = (actId) => {
             const newMessages = response.data.filter((msg) => {
               const content = msg.content || msg.message || "";
               return (
-                content.trim() !== "" && // Фильтруем пустые
+                content.trim() !== "" && 
                 msg.id > lastMessageId &&
                 !messages.some((m) => m.id === msg.id)
               );
@@ -274,7 +256,7 @@ const useChat = (actId) => {
 
             if (newMessages.length > 0) {
               console.log(
-                `✅ Найдено ${newMessages.length} новых сообщений через HTTP`,
+                `Найдено ${newMessages.length} новых сообщений через HTTP`,
               );
               setMessages((prev) => [...prev, ...newMessages]);
             }
@@ -283,10 +265,10 @@ const useChat = (actId) => {
             console.error("Ошибка при проверке новых сообщений:", err);
           });
       }
-    }, 5000); // Каждые 5 секунд
+    }, 5000); 
 
     return () => {
-      console.log("⏹️ Остановка периодической проверки сообщений");
+      console.log("Остановка периодической проверки сообщений");
       clearInterval(interval);
     };
   }, [actId, isConnected, messages, setMessages]);
@@ -300,7 +282,7 @@ const useChat = (actId) => {
     fetchMessages,
     loadMoreMessages,
     setMessages,
-    isConnected, // Добавляем статус подключения
+    isConnected,
   };
 };
 

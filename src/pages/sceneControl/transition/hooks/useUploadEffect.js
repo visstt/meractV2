@@ -13,7 +13,6 @@ export const useUploadEffect = () => {
     setSuccess(false);
 
     try {
-      // Создаем FormData для отправки файла
       const formData = new FormData();
       formData.append("effect", effectFile);
 
@@ -30,7 +29,6 @@ export const useUploadEffect = () => {
     } catch (err) {
       console.error("Error uploading effect:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 400) {

@@ -1,10 +1,9 @@
-// Экспорт стора для прямого использования вне React компонентов
+// Export store for direct use outside React components
 export { useAuthStore } from "./authStore";
 export { useSequelStore } from "./sequelStore";
 
-// Утилиты для работы с localStorage напрямую (если понадобится)
+// Utilities for working with localStorage directly (if needed)
 export const authStorageUtils = {
-  // Получить данные из localStorage
   getStoredAuth: () => {
     try {
       const stored = localStorage.getItem("meract-auth");
@@ -14,13 +13,13 @@ export const authStorageUtils = {
     }
   },
 
-  // Очистить данные из localStorage
+  // Clear data from localStorage
   clearStoredAuth: () => {
     localStorage.removeItem("meract-auth");
     localStorage.removeItem("authToken");
   },
 
-  // Проверить есть ли токен
+  // Check if token exists
   hasToken: () => {
     const stored = authStorageUtils.getStoredAuth();
     return !!(stored?.state?.token || localStorage.getItem("authToken"));

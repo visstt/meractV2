@@ -14,7 +14,6 @@ export const useMusic = () => {
     try {
       const response = await api.get("/music/find-all");
 
-      // Проверяем, что получили массив
       if (Array.isArray(response.data)) {
         setMusic(response.data);
       } else {
@@ -29,7 +28,6 @@ export const useMusic = () => {
     } catch (err) {
       console.error("Error fetching music:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 401) {
@@ -49,7 +47,6 @@ export const useMusic = () => {
     }
   };
 
-  // Автоматически загружаем музыку при монтировании компонента
   useEffect(() => {
     fetchMusic();
   }, []);

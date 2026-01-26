@@ -13,7 +13,6 @@ export const useUploadIntro = () => {
     setSuccess(false);
 
     try {
-      // Создаем FormData для отправки файла
       const formData = new FormData();
       formData.append("intro", introFile);
 
@@ -30,7 +29,6 @@ export const useUploadIntro = () => {
     } catch (err) {
       console.error("Error uploading intro:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 400) {

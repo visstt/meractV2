@@ -14,7 +14,6 @@ export const useOutros = () => {
     try {
       const response = await api.get("/outro/find-all");
 
-      // Проверяем, что получили массив
       if (Array.isArray(response.data)) {
         setOutros(response.data);
       } else {
@@ -29,7 +28,6 @@ export const useOutros = () => {
     } catch (err) {
       console.error("Error fetching outros:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 401) {
@@ -49,7 +47,6 @@ export const useOutros = () => {
     }
   };
 
-  // Автоматически загружаем outro при монтировании компонента
   useEffect(() => {
     fetchOutros();
   }, []);

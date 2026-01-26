@@ -14,7 +14,6 @@ export const useIntros = () => {
     try {
       const response = await api.get("/intro/find-all");
 
-      // Проверяем, что получили массив
       if (Array.isArray(response.data)) {
         setIntros(response.data);
       } else {
@@ -29,7 +28,6 @@ export const useIntros = () => {
     } catch (err) {
       console.error("Error fetching intros:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 401) {
@@ -49,7 +47,6 @@ export const useIntros = () => {
     }
   };
 
-  // Автоматически загружаем интро при монтировании компонента
   useEffect(() => {
     fetchIntros();
   }, []);

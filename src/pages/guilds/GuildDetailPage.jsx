@@ -27,7 +27,6 @@ export default function GuildDetailPage() {
         const response = await api.get(`/guild/${id}`);
         setGuild(response.data);
 
-        // Проверяем, является ли пользователь членом гильдии
         const userIsMember =
           response.data.members?.some(
             (member) => member.id === user?.id || member.userId === user?.id,
@@ -54,53 +53,47 @@ export default function GuildDetailPage() {
     fetchGuildDetails();
   }, [id, user?.id]);
 
-  // WebSocket подключение
   useEffect(() => {
     if (!id) {
-      console.error("❌ No guild id");
+      console.error("No guild id");
       return;
     }
 
     if (!isMember) {
       console.warn(
-        "⚠️ Skipping socket connection - user is not a member of this guild",
+        "Skipping socket connection - user is not a member of this guild",
       );
       return;
     }
 
     console.log(
-      "🔌 Creating socket connection to:",
+      "Creating socket connection to:",
       `${import.meta.env.VITE_API_URL}/guild-chat`,
     );
 
-    // Создаем подключение к сокету с поддержкой httpOnly cookies
     const socket = io(`${import.meta.env.VITE_API_URL}/guild-chat`, {
-      withCredentials: true, // Важно: отправляет httpOnly cookies с бэкенда
+      withCredentials: true, 
       transports: ["websocket", "polling"],
     });
 
     socketRef.current = socket;
 
-    // Успешное подключение
     socket.on("connect", () => {
-      console.log("✅ Connected to guild chat:", socket.id);
-      // Присоединяемся к чату гильдии после подключения
+      console.log("Connected to guild chat:", socket.id);
       socket.emit("joinGuild", { guildId: parseInt(id) });
-      console.log("📨 Joining guild:", parseInt(id));
+      console.log("Joining guild:", parseInt(id));
     });
 
-    // Ошибка подключения
     socket.on("connect_error", (error) => {
-      console.error("❌ Connection error:", error);
+      console.error("Connection error:", error);
       console.error("Error details:", error.message, error.data);
     });
 
-    // Отключение
     socket.on("disconnect", (reason) => {
-      console.log("🔌 Disconnected:", reason);
+      console.log("Disconnected:", reason);
       if (reason === "io server disconnect") {
         console.error(
-          "⚠️ Server forcefully disconnected the socket. Possible reasons:",
+          "Server forcefully disconnected the socket. Possible reasons:",
         );
         console.error("- User not authenticated");
         console.error("- User not a member of this guild");
@@ -108,14 +101,12 @@ export default function GuildDetailPage() {
       }
     });
 
-    // Подтверждение присоединения
     socket.on("joinedGuild", ({ guildId }) => {
-      console.log("✅ Successfully joined guild:", guildId);
+      console.log("Successfully joined guild:", guildId);
     });
 
-    // Получаем историю сообщений
     socket.on("guildChatHistory", ({ messages }) => {
-      console.log("📜 Chat history:", messages);
+      console.log("Chat history:", messages);
       setMessages(
         messages.map((msg) => ({
           id: msg.id,
@@ -127,9 +118,8 @@ export default function GuildDetailPage() {
       );
     });
 
-    // Получаем новые сообщения
     socket.on("newGuildMessage", (message) => {
-      console.log("💬 New message:", message);
+      console.log("New message:", message);
       setMessages((prev) => [
         ...prev,
         {
@@ -142,28 +132,23 @@ export default function GuildDetailPage() {
       ]);
     });
 
-    // Удаление сообщений
     socket.on("guildMessageDeleted", ({ messageId }) => {
-      console.log("🗑️ Message deleted:", messageId);
+      console.log("Message deleted:", messageId);
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
 
-    // Ошибка отправки сообщения
     socket.on("messageError", ({ message }) => {
-      console.error("❌ Error sending message:", message);
+      console.error("Error sending message:", message);
     });
 
-    // Ошибка удаления
     socket.on("deleteError", ({ message }) => {
-      console.error("❌ Error deleting message:", message);
+      console.error("Error deleting message:", message);
     });
 
-    // Обработка общих ошибок
     socket.on("error", ({ message }) => {
-      console.error("❌ Guild chat error:", message);
+      console.error("Guild chat error:", message);
     });
 
-    // Очистка при размонтировании
     return () => {
       socket.emit("leaveGuild");
       socket.disconnect();
@@ -251,7 +236,7 @@ export default function GuildDetailPage() {
           <div className={styles.messagesContainer}>
             {!isMember ? (
               <div className={styles.emptyChat}>
-                <p>⚠️ You are not a member of this guild</p>
+                <p>You are not a member of this guild</p>
                 <p style={{ fontSize: "12px", marginTop: "10px" }}>
                   Join the guild to access the chat
                 </p>

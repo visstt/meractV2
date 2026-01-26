@@ -15,8 +15,6 @@ export function useSignUp() {
     try {
       const res = await api.post("/auth/sign-up", { email, password });
 
-      // If registration returns user data and token,
-      // save them to the store (optional)
       if (res.data && (res.data.token || res.data.user)) {
         login(res.data);
       }

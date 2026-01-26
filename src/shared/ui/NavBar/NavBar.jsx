@@ -95,7 +95,6 @@ export default function NavBar() {
     if (item.isGuildChat && guildId) {
       navigate(`/guilds/${guildId}`);
     } else if (item.isGuildChat) {
-      // Если нет гильдии, можно перенаправить на страницу гильдий
       navigate("/guilds");
     } else {
       navigate(item.path);

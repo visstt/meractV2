@@ -20,7 +20,6 @@ export const ActStatus = {
   OFFLINE: "OFFLINE",
 };
 
-// Функция для создания объекта CreateActRequest
 export const createActRequest = (data) => ({
   title: data.title,
   sequel: data.sequel || null,
@@ -32,7 +31,6 @@ export const createActRequest = (data) => ({
   photo: data.photo || null,
 });
 
-// Валидация данных Act
 export const validateActData = (data) => {
   const errors = [];
 

@@ -36,7 +36,6 @@ export default function SceneControlOutro() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверяем, что это видео файл
     if (!file.type.startsWith("video/")) {
       alert("Пожалуйста, выберите видео файл");
       return;
@@ -44,36 +43,29 @@ export default function SceneControlOutro() {
 
     const result = await uploadOutro(file);
     if (result) {
-      // Успешная загрузка - обновляем список outro
       refetch();
       resetState();
     }
 
-    // Очищаем input для возможности загрузки того же файла повторно
     e.target.value = "";
   };
 
   const handleOutroSelect = (outro) => {
     setSelectedOutro(outro);
-    // Сохраняем выбранное outro в стор
     setOutroInStore(outro);
-    // Показываем уведомление
     toast.success("Outro selected successfully!");
   };
 
-  // Синхронизируем локальный стейт со store при монтировании
   useEffect(() => {
     if (outroFromStore) {
       setSelectedOutro(outroFromStore);
     }
   }, [outroFromStore]);
 
-  // Автоматически выбираем первое outro после загрузки
   useEffect(() => {
     if (!loading && !error && outros.length > 0 && !outroFromStore) {
       const firstOutro = outros[0];
       setSelectedOutro(firstOutro);
-      // Сохраняем в стор
       setOutroInStore(firstOutro);
     }
   }, [outros, loading, error, outroFromStore, setOutroInStore]);
@@ -190,7 +182,6 @@ export default function SceneControlOutro() {
               />
             </div>
 
-            {/* Показываем сообщения об ошибке или успехе загрузки */}
             {uploadError && (
               <div
                 style={{

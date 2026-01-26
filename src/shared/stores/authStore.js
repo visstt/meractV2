@@ -1,24 +1,21 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Константы для localStorage
 const AUTH_STORAGE_KEY = "meract-auth";
 
-// Создаем стор с persist middleware для автоматического сохранения в localStorage
+// Create store with persist middleware for automatic saving to localStorage
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      // Состояние
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
-      location: null, // { latitude, longitude, timestamp }
-      routeDestination: null, // { latitude, longitude }
-      routeCoordinates: null, // array of [lat, lng] pairs
-      routePoints: [], // array of { latitude, longitude, order }
+      location: null, 
+      routeDestination: null, 
+      routeCoordinates: null,
+      routePoints: [],
 
-      // Действия
       setUser: (userData) => {
         set({
           user: userData.user || userData,
@@ -68,7 +65,7 @@ export const useAuthStore = create(
         const newPoint = {
           latitude: point.latitude,
           longitude: point.longitude,
-          order: currentPoints.length, // Автоматически присваиваем порядковый номер
+          order: currentPoints.length, 
         };
         set({
           routePoints: [...currentPoints, newPoint],
@@ -78,7 +75,6 @@ export const useAuthStore = create(
       removeRoutePoint: (order) => {
         const currentPoints = get().routePoints;
         const filteredPoints = currentPoints.filter((p) => p.order !== order);
-        // Переиндексируем точки после удаления
         const reindexedPoints = filteredPoints.map((p, index) => ({
           ...p,
           order: index,
@@ -100,14 +96,12 @@ export const useAuthStore = create(
 
       setToken: (newToken) => {
         set({ token: newToken });
-        // Также обновляем токен в localStorage
         if (newToken) {
           localStorage.setItem("authToken", newToken);
         }
       },
 
       login: (userData) => {
-        // Сохраняем данные пользователя и токен
         set({
           user: userData.user || userData,
           token: userData.token || userData.accessToken,
@@ -115,7 +109,6 @@ export const useAuthStore = create(
           isLoading: false,
         });
 
-        // Дополнительно сохраняем токен в localStorage для API запросов
         if (userData.token || userData.accessToken) {
           localStorage.setItem(
             "authToken",
@@ -132,23 +125,19 @@ export const useAuthStore = create(
           isLoading: false,
         });
 
-        // Очищаем токен из localStorage
         localStorage.removeItem("authToken");
       },
 
-      // Проверка аутентификации
       checkAuth: () => {
         const state = get();
         return state.isAuthenticated && state.token;
       },
 
-      // Получение токена для API запросов
       getToken: () => {
         const state = get();
         return state.token || localStorage.getItem("authToken");
       },
 
-      // Обновление данных пользователя
       updateUser: (updatedData) => {
         const state = get();
         if (state.user) {
@@ -159,21 +148,21 @@ export const useAuthStore = create(
       },
     }),
     {
-      name: AUTH_STORAGE_KEY, // ключ для localStorage
-      // Настройки persist
+      name: AUTH_STORAGE_KEY, 
+      // Persist settings
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
         location: state.location,
       }),
-      // Версия стора для миграций
+      // Store version for migrations
       version: 1,
     },
   ),
 );
 
-// Селекторы для удобного использования
+// Selectors for convenient usage
 export const selectUser = (state) => state.user;
 export const selectIsAuthenticated = (state) => state.isAuthenticated;
 export const selectToken = (state) => state.token;

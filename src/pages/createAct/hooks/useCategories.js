@@ -10,7 +10,6 @@ export function useCategories() {
     setError(null);
 
     try {
-      // Используем статичные категории
       const staticCategories = [
         { id: 1, name: "Gaming" },
         { id: 2, name: "Music" },

@@ -30,8 +30,8 @@ export default function SelectMusic() {
     if (file) {
       const success = await uploadMusicFile(file);
       if (success) {
-        refetch(); // Обновляем список музыки
-        event.target.value = ""; // Очищаем input
+        refetch(); 
+        event.target.value = ""; 
       }
     }
   };
@@ -40,8 +40,8 @@ export default function SelectMusic() {
     if (musicUrl.trim()) {
       const success = await uploadMusicFromUrl(musicUrl.trim());
       if (success) {
-        refetch(); // Обновляем список музыки
-        setMusicUrl(""); // Очищаем URL
+        refetch(); 
+        setMusicUrl(""); 
       }
     }
   };
@@ -53,7 +53,6 @@ export default function SelectMusic() {
   const handlePlayPause = (track) => {
     const trackId = track.id;
 
-    // Если этот трек уже играет, ставим на паузу
     if (currentlyPlaying === trackId) {
       const audio = audioElements[trackId];
       if (audio && !audio.paused) {
@@ -63,14 +62,12 @@ export default function SelectMusic() {
       }
     }
 
-    // Останавливаем все другие треки
     Object.values(audioElements).forEach((audio) => {
       if (audio && !audio.paused) {
         audio.pause();
       }
     });
 
-    // Создаем или получаем аудио элемент для этого трека
     let audio = audioElements[trackId];
     if (!audio) {
       audio = new Audio(track.fileName);
@@ -88,7 +85,6 @@ export default function SelectMusic() {
       }));
     }
 
-    // Воспроизводим трек
     audio
       .play()
       .then(() => {
@@ -110,7 +106,6 @@ export default function SelectMusic() {
     });
   };
 
-  // Фильтрация музыки по поисковому запросу
   const filteredMusic = music.filter((track) => {
     const title = extractMusicTitle(track.fileName).toLowerCase();
     return title.includes(searchTerm.toLowerCase());
@@ -168,7 +163,6 @@ export default function SelectMusic() {
   };
   const Play = ({ isCurrentlyPlaying }) => {
     if (isCurrentlyPlaying) {
-      // Иконка паузы
       return (
         <svg
           width="13"
@@ -183,7 +177,6 @@ export default function SelectMusic() {
       );
     }
 
-    // Иконка play
     return (
       <svg
         width="13"
@@ -268,7 +261,6 @@ export default function SelectMusic() {
             />
           </div>
 
-          {/* Показываем состояния загрузки */}
           {loading && (
             <div
               style={{
@@ -334,7 +326,6 @@ export default function SelectMusic() {
             </div>
           )}
 
-          {/* Отображаем отфильтрованную музыку */}
           {!loading &&
             !error &&
             filteredMusic.map((track) => (

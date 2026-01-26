@@ -34,7 +34,7 @@ export function useActs() {
 
       console.log("Act stopped:", response.data);
 
-      // Обновляем список актов
+
       await fetchActs();
 
       return response.data;

@@ -2,7 +2,6 @@ import axios from "axios";
 
 import { useAuthStore } from "../stores/authStore";
 
-// Флаг для отслеживания процесса обновления токена
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -26,10 +25,9 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Интерцептор для добавления токена в каждый запрос
+// Interceptor for adding token to each request
 api.interceptors.request.use(
   (config) => {
-    // Получаем токен из стора
     const token = useAuthStore.getState().getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -41,19 +39,17 @@ api.interceptors.request.use(
   },
 );
 
-// Интерцептор для обработки ответов с автоматическим обновлением токена
+// Interceptor for handling responses with automatic token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Не обрабатываем 401 для самого запроса обновления токена
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url.includes("/auth/refresh")
     ) {
-      // Если уже идет процесс обновления токена, добавляем запрос в очередь
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -71,26 +67,20 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Пытаемся обновить токен
         const response = await api.post("/auth/refresh");
         const { token } = response.data;
 
-        // Сохраняем новый токен в стор
         useAuthStore.getState().setToken(token);
 
-        // Обрабатываем очередь запросов
         processQueue(null, token);
 
-        // Обновляем заголовок Authorization в оригинальном запросе
         originalRequest.headers.Authorization = `Bearer ${token}`;
 
-        // Повторяем оригинальный запрос с новым токеном
         return api(originalRequest);
       } catch (refreshError) {
-        // Обрабатываем очередь с ошибкой
         processQueue(refreshError, null);
 
-        // Если обновление токена тоже вернуло 401, то разлогиниваем
+        // If token refresh also returns 401, log out
         if (refreshError.response?.status === 401) {
           useAuthStore.getState().logout();
           window.location.href = "/login";
@@ -101,7 +91,7 @@ api.interceptors.response.use(
       }
     }
 
-    // Если это 401 на /auth/refresh, сразу разлогиниваем
+    // If it's 401 on /auth/refresh, log out immediately
     if (
       error.response?.status === 401 &&
       originalRequest.url.includes("/auth/refresh")

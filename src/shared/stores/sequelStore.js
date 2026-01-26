@@ -4,26 +4,20 @@ import { persist } from "zustand/middleware";
 export const useSequelStore = create(
   persist(
     (set, get) => ({
-      // Sequel
       selectedSequelId: null,
       selectedSequel: null,
 
-      // Intro
       selectedIntroId: null,
       selectedIntro: null,
 
-      // Outro
       selectedOutroId: null,
       selectedOutro: null,
 
-      // Music (массив для множественного выбора)
       selectedMusicIds: [],
       selectedMusic: [],
 
-      // Effect (для transition эффектов) - храним ID эффекта
       selectedEffect: null,
 
-      // Устанавливаем выбранный сиквел
       setSelectedSequel: (sequel) => {
         set({
           selectedSequelId: sequel?.id || null,
@@ -31,7 +25,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Очищаем выбранный сиквел
       clearSelectedSequel: () => {
         set({
           selectedSequelId: null,
@@ -39,7 +32,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Устанавливаем выбранное intro
       setSelectedIntro: (intro) => {
         set({
           selectedIntroId: intro?.id || null,
@@ -47,7 +39,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Очищаем выбранное intro
       clearSelectedIntro: () => {
         set({
           selectedIntroId: null,
@@ -55,7 +46,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Устанавливаем выбранное outro
       setSelectedOutro: (outro) => {
         set({
           selectedOutroId: outro?.id || null,
@@ -63,7 +53,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Очищаем выбранное outro
       clearSelectedOutro: () => {
         set({
           selectedOutroId: null,
@@ -71,13 +60,11 @@ export const useSequelStore = create(
         });
       },
 
-      // Добавляем или удаляем музыку из выбранных
       toggleSelectedMusic: (music) => {
         const state = get();
         const isSelected = state.selectedMusicIds.includes(music.id);
 
         if (isSelected) {
-          // Удаляем музыку из выбранных
           set({
             selectedMusicIds: state.selectedMusicIds.filter(
               (id) => id !== music.id,
@@ -85,7 +72,6 @@ export const useSequelStore = create(
             selectedMusic: state.selectedMusic.filter((m) => m.id !== music.id),
           });
         } else {
-          // Добавляем музыку к выбранным
           set({
             selectedMusicIds: [...state.selectedMusicIds, music.id],
             selectedMusic: [...state.selectedMusic, music],
@@ -93,7 +79,6 @@ export const useSequelStore = create(
         }
       },
 
-      // Устанавливаем массив выбранной музыки
       setSelectedMusic: (musicArray) => {
         const musicList = Array.isArray(musicArray) ? musicArray : [musicArray];
         set({
@@ -102,7 +87,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Очищаем выбранную музыку
       clearSelectedMusic: () => {
         set({
           selectedMusicIds: [],
@@ -110,21 +94,18 @@ export const useSequelStore = create(
         });
       },
 
-      // Устанавливаем выбранный эффект
       setSelectedEffect: (effectId) => {
         set({
           selectedEffect: effectId,
         });
       },
 
-      // Очищаем выбранный эффект
       clearSelectedEffect: () => {
         set({
           selectedEffect: null,
         });
       },
 
-      // Очищаем все выбранные элементы
       clearAll: () => {
         set({
           selectedSequelId: null,
@@ -139,7 +120,6 @@ export const useSequelStore = create(
         });
       },
 
-      // Получаем выбранный сиквел
       getSelectedSequel: () => {
         const state = get();
         return {
@@ -148,7 +128,6 @@ export const useSequelStore = create(
         };
       },
 
-      // Получаем выбранное intro
       getSelectedIntro: () => {
         const state = get();
         return {
@@ -157,7 +136,6 @@ export const useSequelStore = create(
         };
       },
 
-      // Получаем выбранное outro
       getSelectedOutro: () => {
         const state = get();
         return {
@@ -166,7 +144,6 @@ export const useSequelStore = create(
         };
       },
 
-      // Получаем выбранную музыку
       getSelectedMusic: () => {
         const state = get();
         return {
@@ -175,7 +152,6 @@ export const useSequelStore = create(
         };
       },
 
-      // Получаем выбранный эффект
       getSelectedEffect: () => {
         const state = get();
         return state.selectedEffect;
@@ -183,9 +159,8 @@ export const useSequelStore = create(
     }),
     {
       name: "meract-scene-store",
-      version: 1, // Добавляем версию для миграции
+      version: 1,
       migrate: (persistedState, version) => {
-        // Миграция старых данных: если selectedMusic не массив, конвертируем
         if (persistedState && !Array.isArray(persistedState.selectedMusic)) {
           const oldMusic = persistedState.selectedMusic;
           return {

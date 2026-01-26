@@ -267,7 +267,6 @@
   font-size: 14px;
 }
 
-/* Chat Styles - Based on Guild Chat */
 .chatSection {
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -447,7 +446,6 @@
   flex-direction: column;
 }
 
-/* Music Controls Modal */
 .musicModalContent {
   background: rgba(0, 0, 0, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.2);

@@ -4,9 +4,6 @@ import { useAchievements } from "../../shared/hooks/useAchievements";
 import { useAuthStore } from "../../shared/stores/authStore";
 import styles from "./AchievementsPage.module.css";
 
-/**
- * Страница для просмотра и управления достижениями
- */
 export default function AchievementsPage() {
   const { user } = useAuthStore();
   const {
@@ -19,13 +16,11 @@ export default function AchievementsPage() {
     hasAchievement,
   } = useAchievements();
 
-  const [selectedTab, setSelectedTab] = useState("all"); // 'all' или 'my'
+  const [selectedTab, setSelectedTab] = useState("all"); 
 
   useEffect(() => {
-    // Загружаем все достижения при монтировании
     fetchAllAchievements();
 
-    // Загружаем достижения пользователя
     if (user?.id) {
       fetchUserAchievements();
     }

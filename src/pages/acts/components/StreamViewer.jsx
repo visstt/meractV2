@@ -77,7 +77,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         setActualStreamData(response.data);
       } catch (error) {
         console.error("Error loading stream data:", error);
-        // Fallback to initial streamData if loading fails
         setActualStreamData(streamData);
       }
     };
@@ -85,7 +84,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     loadStreamData();
   }, [actId, streamData]);
 
-  // Исправляем иконки маркеров Leaflet
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -97,7 +95,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     });
   }, []);
 
-  // Получаем геолокацию пользователя
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -116,7 +113,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
 
   const remoteVideoRef = useRef(null);
   const clientRef = useRef(null);
-  const isConnectingRef = useRef(false); // Flag to prevent double connection
+  const isConnectingRef = useRef(false);
   const streamStartTimeRef = useRef(null);
 
   // Get user from auth store
@@ -138,14 +135,14 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     return channelName?.replace("act_", "") || streamData?.id || "default";
   }, [channelName, streamData]);
 
-  // Create UNIQUE UID for viewer - генерируется только один раз при монтировании
-  // Формула: (streamId * 1000000) + (baseUserId * 100) + randomComponent
+  // Create UNIQUE UID for viewer 
+  // (streamId * 1000000) + (baseUserId * 100) + randomComponent
   const userId = useMemo(() => {
     const randomComponent = Math.floor(Math.random() * 100); // 0-99
     const uid =
       parseInt(streamId) * 1000000 + baseUserId * 100 + randomComponent;
 
-    // Сохраняем UID сразу после генерации
+    // Save UID immediately after generation
     window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
     window.__STREAM_UIDS__[`${uid}_viewer`] = Date.now();
 
@@ -202,7 +199,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           userId,
         );
 
-        // Get token from your backend for subscriber (viewer)
+        // Get token from backend for subscriber (viewer)
         // Use userId from auth store
         const response = await api.get(
           `/act/token/${actualChannelName}/SUBSCRIBER/uid?uid=${userId}&expiry=3600`,
@@ -230,7 +227,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         disconnectFromStream();
       }
     };
-  }, [streamData?.id, actualChannelName, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [streamData?.id, actualChannelName, userId]); 
 
   // Timer for stream duration
   useEffect(() => {
@@ -496,7 +493,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
       if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
         delete window.__STREAM_UIDS__[uidKey];
         console.log(
-          "%c🗑️ UID cleared from viewer: " + userId,
+          "UID cleared from viewer: " + userId,
           "color: #FFA500; font-weight: bold;",
         );
       }
@@ -557,9 +554,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
 
   return (
     <div className={styles.container}>
-      {/* Stream header */}
       <div className={styles.header}>
-        {/* Top row: back arrow, title, timer */}
         <div className={styles.topRow}>
           <button onClick={handleClose} className={styles.backButton}>
             <svg
@@ -598,7 +593,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           </div>
         </div>
 
-        {/* Location */}
         <div className={styles.location}>
           <svg
             width="17"
@@ -619,7 +613,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           </span>
         </div>
 
-        {/* Roles navigation row */}
         {(streamData?.navigator ||
           streamData?.hero ||
           streamData?.initiator) && (
@@ -645,11 +638,8 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         <div ref={remoteVideoRef} className={styles.videoElement} />
       </div>
 
-      {/* Chat Container */}
       <div className={styles.chatContainer}>
-        {/* Chat Panel */}
         <div className={styles.chatPanel}>
-          {/* Chat Messages */}
           <div className={styles.chatMessages}>
             {chatMessages && chatMessages.length > 0 ? (
               chatMessages.map((message) => (
@@ -667,7 +657,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
             )}
           </div>
 
-          {/* Chat Input */}
           <div className={styles.chatInput}>
             <input
               type="text"
@@ -693,7 +682,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
               <img src="/icons/chat/send.png" alt="Send" />
             </button>
 
-            {/* Emoji Picker */}
             {showEmojiPicker && (
               <EmojiPicker
                 onEmojiSelect={handleEmojiSelect}
@@ -703,7 +691,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           </div>
         </div>
 
-        {/* Chat Action Buttons */}
         <div className={styles.chatActions}>
           <button
             className={styles.actionButton}
@@ -723,7 +710,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         </div>
       </div>
 
-      {/* Map Overlay */}
       {showMap && (
         <div className={styles.mapOverlay}>
           {console.log("StreamViewer - Rendering Map with state:", {
@@ -796,14 +782,12 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                 )}
               </>
             )}
-            {/* Render route points with numbered markers */}
             {actualStreamData?.routePoints &&
               actualStreamData.routePoints.length > 0 &&
               actualStreamData.routePoints
                 .slice()
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((pt) => {
-                  // Skip if this point matches start location (to avoid duplicate)
                   const isStartPoint =
                     startLocation &&
                     Math.abs(pt.latitude - startLocation.latitude) < 0.0001 &&
@@ -842,7 +826,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         </div>
       )}
 
-      {/* Tasks Modal */}
       {isTasksModalOpen && (
         <div
           className={styles.modalOverlay}

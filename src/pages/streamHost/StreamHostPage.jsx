@@ -6,13 +6,12 @@ import StreamHost from "../createAct/components/StreamHost";
 import styles from "./StreamHostPage.module.css";
 
 export default function StreamHostPage() {
-  const { id } = useParams(); // Get act ID from URL
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   console.log("StreamHostPage - URL params:", { id });
   console.log("StreamHostPage - Current URL:", window.location.href);
 
-  // If no ID is provided, show error message
   if (!id) {
     return (
       <div className={styles.container}>
@@ -57,7 +56,6 @@ export default function StreamHostPage() {
   }
 
   const handleStopStream = () => {
-    // After stopping the stream, return to main page
     navigate("/acts");
   };
 

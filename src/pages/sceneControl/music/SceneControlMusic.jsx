@@ -87,11 +87,9 @@ export default function SceneControlMusic() {
   };
 
   const handleMusicSelect = (track) => {
-    // Добавляем или удаляем трек из выбранных
     const isCurrentlySelected = selectedMusic.some((m) => m.id === track.id);
     toggleSelectedMusic(track);
 
-    // Показываем уведомление
     if (isCurrentlySelected) {
       toast.info("Music removed from selection");
     } else {
@@ -104,7 +102,6 @@ export default function SceneControlMusic() {
   const handlePlayPause = (track) => {
     const trackId = track.id;
 
-    // Если этот трек уже играет, ставим на паузу
     if (currentlyPlaying === trackId) {
       const audio = audioElements[trackId];
       if (audio && !audio.paused) {
@@ -114,14 +111,12 @@ export default function SceneControlMusic() {
       }
     }
 
-    // Останавливаем все другие треки
     Object.values(audioElements).forEach((audio) => {
       if (audio && !audio.paused) {
         audio.pause();
       }
     });
 
-    // Создаем или получаем аудио элемент для этого трека
     let audio = audioElements[trackId];
     if (!audio) {
       audio = new Audio(track.fileName);
@@ -139,7 +134,6 @@ export default function SceneControlMusic() {
       }));
     }
 
-    // Воспроизводим трек
     audio
       .play()
       .then(() => {
@@ -241,7 +235,6 @@ export default function SceneControlMusic() {
               Select Playlist Music
             </button>
 
-            {/* Показываем состояния загрузки */}
             {loading && (
               <div
                 style={{
@@ -292,7 +285,6 @@ export default function SceneControlMusic() {
               </div>
             )}
 
-            {/* Отображаем реальную музыку */}
             {!loading &&
               !error &&
               music.map((track, index) => (
@@ -306,7 +298,7 @@ export default function SceneControlMusic() {
                   <div className={styles.music_name}>
                     <div
                       onClick={(e) => {
-                        e.stopPropagation(); // Предотвращаем вызов handleMusicSelect
+                        e.stopPropagation(); 
                         handlePlayPause(track);
                       }}
                       style={{ cursor: "pointer" }}

@@ -20,24 +20,21 @@ export default function SelectSequel() {
   const handleSequelSelect = (sequel) => {
     console.log("Selected sequel:", sequel);
     setSelectedSequelId(sequel.id);
-    // Сохраняем выбранный сиквел в стор
     setSelectedSequel(sequel);
   };
 
   const handleAddToAct = (event) => {
-    event.stopPropagation(); // Предотвращаем вызов handleSequelSelect
+    event.stopPropagation(); 
     console.log("handleAddToAct called, selectedSequelId:", selectedSequelId);
     if (selectedSequelId) {
       console.log("Adding sequel to act:", selectedSequelId);
       console.log("Navigating to /create-act");
-      // Переходим на страницу создания акта (сиквел уже сохранен в сторе)
       navigate("/create-act");
     } else {
       alert("Please select a sequel first");
     }
   };
 
-  // Фильтрация сиквелов по поисковому запросу
   const filteredSequels = sequels.filter((sequel) =>
     sequel.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );

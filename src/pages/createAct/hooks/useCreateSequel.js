@@ -13,14 +13,11 @@ export const useCreateSequel = () => {
     setSuccess(false);
 
     try {
-      // Создаем FormData для отправки файла
       const formData = new FormData();
 
-      // Добавляем обязательные поля
       formData.append("title", sequelData.title);
       formData.append("episodes", sequelData.episodes);
 
-      // Добавляем фото если есть
       if (sequelData.photo) {
         formData.append("photo", sequelData.photo);
       }
@@ -38,7 +35,6 @@ export const useCreateSequel = () => {
     } catch (err) {
       console.error("Error creating sequel:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 400) {

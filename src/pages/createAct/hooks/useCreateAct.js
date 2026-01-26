@@ -7,17 +7,14 @@ import { validateActData } from "../../../shared/types/act";
 
 // Function to translate technical validation errors into user-friendly messages
 const translateErrorMessage = (errorMessage) => {
-  // Handle array of errors (from validation response)
   if (Array.isArray(errorMessage)) {
     const translatedErrors = errorMessage.map((err) =>
       translateSingleError(err),
     );
-    // Remove duplicates by converting to Set and back to Array
     const uniqueErrors = [...new Set(translatedErrors)];
     return uniqueErrors.join("\n");
   }
 
-  // Handle single error message
   return translateSingleError(errorMessage);
 };
 
@@ -94,7 +91,6 @@ const translateSingleError = (error) => {
     return "You don't have permission to create acts. Please contact support";
   }
 
-  // Default fallback
   return error || "Something went wrong. Please try again";
 };
 
@@ -111,13 +107,11 @@ export function useCreateAct() {
     setSuccess(false);
 
     try {
-      // Валидация данных
       const validationErrors = validateActData(actData);
       if (validationErrors.length > 0) {
         throw new Error(validationErrors.join(", "));
       }
 
-      // Проверяем что пользователь авторизован
       console.log("Auth check - isAuthenticated:", isAuthenticated);
       console.log("Auth check - user object:", user);
       console.log("Auth check - token:", getToken());
@@ -126,14 +120,11 @@ export function useCreateAct() {
         throw new Error("User not authenticated");
       }
 
-      // Получаем user ID, если есть в объекте user, иначе извлекаем из токена
       const userId = user?.id || user?.sub;
       console.log("Extracted userId:", userId);
 
-      // Подготавливаем FormData для отправки файла
       const formData = new FormData();
 
-      // Добавляем обязательные поля
       formData.append("title", actData.title);
       formData.append("type", actData.type);
       formData.append("format", actData.format);
@@ -144,13 +135,10 @@ export function useCreateAct() {
         formData.append("userId", userId.toString());
       }
 
-      // Добавляем опциональные поля
-      // Важно: не отправляем поля со значением null, т.к. бэкенд может их неправильно обработать
       if (actData.sequel) {
         formData.append("sequel", actData.sequel);
       }
 
-      // Отправляем sequelId ТОЛЬКО если он есть и не равен null/undefined
       if (actData.sequelId && typeof actData.sequelId === "number") {
         formData.append("sequelId", actData.sequelId.toString());
         console.log("Adding sequelId to FormData:", actData.sequelId);
@@ -166,14 +154,11 @@ export function useCreateAct() {
         formData.append("outroId", actData.outroId.toString());
       }
 
-      // Добавляем массив musicIds
       if (actData.musicIds) {
-        // Приводим к массиву, если это не массив (на случай одиночного значения)
         const musicIdsArray = Array.isArray(actData.musicIds)
           ? actData.musicIds
           : [actData.musicIds];
 
-        // Фильтруем null и undefined
         const validMusicIds = musicIdsArray.filter(
           (id) => id !== null && id !== undefined,
         );
@@ -181,15 +166,12 @@ export function useCreateAct() {
         console.log("Adding musicIds to FormData:", validMusicIds);
 
         if (validMusicIds.length > 0) {
-          // Отправляем каждый ID отдельно с одинаковым ключом
-          // Это стандартный способ для FormData
           validMusicIds.forEach((id) => {
             formData.append("musicIds[]", id.toString());
           });
         }
       }
 
-      // Добавляем координаты если есть
       if (
         actData.startLatitude !== null &&
         actData.startLatitude !== undefined
@@ -221,12 +203,10 @@ export function useCreateAct() {
         );
       }
 
-      // Добавляем файл если есть
       if (actData.photo) {
         formData.append("photo", actData.photo);
       }
 
-      // Логируем все данные из FormData для отладки
       console.log("FormData entries:");
       for (let [key, value] of formData.entries()) {
         console.log(`  ${key}:`, value);
@@ -247,7 +227,6 @@ export function useCreateAct() {
         musicIds: actData.musicIds,
       });
 
-      // Отправляем запрос
       const response = await api.post("/act/create-act", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -259,7 +238,6 @@ export function useCreateAct() {
 
       console.log("Act created successfully:", response.data);
 
-      // Добавляем созданный акт в store
       addAct({
         ...actData,
         userId: user.id,
@@ -270,13 +248,12 @@ export function useCreateAct() {
       // Note: Navigation is handled by the calling component (CreateAct.jsx)
       // navigate(`/stream-host/${response.data.actId}`);
 
-      return response.data; // { message: 'Stream launched successfully', actId: number }
+      return response.data;
     } catch (err) {
       console.error("Error creating act:", err);
 
       let errorMessage = "Failed to create act";
 
-      // Extract error message from response
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.errors) {
@@ -287,7 +264,6 @@ export function useCreateAct() {
         errorMessage = err.message;
       }
 
-      // Translate technical errors to user-friendly messages
       const friendlyError = translateErrorMessage(errorMessage);
 
       console.error("Translated error:", friendlyError);

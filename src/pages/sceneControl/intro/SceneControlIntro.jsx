@@ -36,7 +36,6 @@ export default function SceneControlMusic() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Проверяем, что это видео файл
     if (!file.type.startsWith("video/")) {
       alert("Пожалуйста, выберите видео файл");
       return;
@@ -44,35 +43,27 @@ export default function SceneControlMusic() {
 
     const result = await uploadIntro(file);
     if (result) {
-      // Успешная загрузка - обновляем список интро
       refetch();
       resetState();
     }
 
-    // Очищаем input для возможности загрузки того же файла повторно
     e.target.value = "";
   };
 
   const handleIntroSelect = (intro) => {
     setSelectedIntro(intro);
-    // Сохраняем выбранное intro в стор
     setIntroInStore(intro);
-    // Показываем уведомление
     toast.success("Intro selected successfully!");
   };
 
-  // Синхронизируем локальный стейт со store при монтировании
   useEffect(() => {
     if (introFromStore) {
       setSelectedIntro(introFromStore);
     }
   }, [introFromStore]);
 
-  // Автоматический выбор первого интро (если есть). Если интро нет, ничего не делаем.
   useEffect(() => {
-    // Если ещё идёт загрузка или есть ошибка - не выбираем
     if (loading || error) return;
-    // Нет интро или уже есть выбранное в store - выходим
     if (!Array.isArray(intros) || intros.length === 0 || introFromStore) return;
 
     const firstIntro = intros[0];
@@ -194,7 +185,6 @@ export default function SceneControlMusic() {
               />
             </div>
 
-            {/* Показываем сообщения об ошибке или успехе загрузки */}
             {uploadError && (
               <div
                 style={{

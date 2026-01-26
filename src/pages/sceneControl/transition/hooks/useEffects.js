@@ -14,7 +14,6 @@ export const useEffects = () => {
     try {
       const response = await api.get("/effect/find-all");
 
-      // Проверяем, что получили массив
       if (Array.isArray(response.data)) {
         setEffects(response.data);
       } else {
@@ -29,7 +28,6 @@ export const useEffects = () => {
     } catch (err) {
       console.error("Error fetching effects:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 401) {
@@ -49,7 +47,6 @@ export const useEffects = () => {
     }
   };
 
-  // Автоматически загружаем эффекты при монтировании компонента
   useEffect(() => {
     fetchEffects();
   }, []);

@@ -49,7 +49,6 @@
   backdrop-filter: blur(20px);
 }
 
-/* Переопределяем стили StreamHost для лучшего вида на отдельной странице */
 .streamContent > div {
   padding: 40px;
   background: transparent;

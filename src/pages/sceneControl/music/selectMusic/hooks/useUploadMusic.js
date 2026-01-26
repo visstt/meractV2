@@ -13,7 +13,6 @@ export const useUploadMusic = () => {
     setSuccess(false);
 
     try {
-      // Создаем FormData для отправки файла
       const formData = new FormData();
       formData.append("music", musicFile);
 
@@ -26,15 +25,12 @@ export const useUploadMusic = () => {
       setSuccess(true);
       setUploading(false);
 
-      // Не сохраняем загруженную музыку автоматически в стор
-      // Пользователь должен кликнуть на неё чтобы выбрать
       console.log("Music uploaded successfully:", response.data.music);
 
       return response.data;
     } catch (err) {
       console.error("Error uploading music:", err);
 
-      // Обработка различных типов ошибок
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 400) {
@@ -64,33 +60,26 @@ export const useUploadMusic = () => {
     setSuccess(false);
 
     try {
-      // Проверяем, что URL валидный
       if (!url || !url.trim()) {
         throw new Error("Пожалуйста, введите ссылку на файл");
       }
 
-      // Скачиваем файл по ссылке
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Не удалось скачать файл по ссылке");
       }
 
-      // Получаем blob
       const blob = await response.blob();
 
-      // Проверяем, что это аудио файл
       if (!blob.type.startsWith("audio/")) {
         throw new Error("Файл по ссылке не является аудио файлом");
       }
 
-      // Извлекаем имя файла из URL
       const urlPath = new URL(url).pathname;
       const fileName = urlPath.split("/").pop() || "downloaded-music.mp3";
 
-      // Создаем File объект из blob
       const file = new File([blob], fileName, { type: blob.type });
 
-      // Загружаем файл через наш API
       const result = await uploadMusicFile(file);
       return result;
     } catch (err) {

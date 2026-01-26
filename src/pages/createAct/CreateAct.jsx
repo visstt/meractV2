@@ -41,21 +41,17 @@ export default function CreateAct() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sequelCoverPreview, setSequelCoverPreview] = useState(null);
 
-  // Состояние для формы сиквела
   const [sequelTitle, setSequelTitle] = useState("");
   const [sequelEpisodes, setSequelEpisodes] = useState("");
   const [sequelPhoto, setSequelPhoto] = useState(null);
 
-  // Состояние для созданного act
   const [createdAct, setCreatedAct] = useState(null);
   const [showStream, setShowStream] = useState(false);
 
-  // Состояние для модального окна задач
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [loadingTasks, setLoadingTasks] = useState(false);
 
-  // Состояние для карты и координат
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -74,7 +70,7 @@ export default function CreateAct() {
     clearRoutePoints,
   } = useAuthStore();
 
-  // Используем store для надежного хранения tasks
+  // Using store for reliable tasks storage
   const {
     createActFormState,
     setCreateActTasks,
@@ -108,7 +104,7 @@ export default function CreateAct() {
     resetState: resetSequelState,
   } = useCreateSequel();
 
-  // Отладка изменений selectedSequelId из стора
+  // Debugging selectedSequelId changes from store
   useEffect(() => {
     console.log("selectedSequelId from store changed:", selectedSequelId);
     console.log("selectedSequel from store:", selectedSequel);
@@ -129,7 +125,7 @@ export default function CreateAct() {
     selectedMusic,
   ]);
 
-  // Утилитарная функция для конвертации base64 в File
+  // Utility function for converting base64 to File
   const base64ToFile = useCallback((base64, fileName = "image.png") => {
     const arr = base64.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
@@ -142,12 +138,10 @@ export default function CreateAct() {
     return new File([u8arr], fileName, { type: mime });
   }, []);
 
-  // Функции для работы с задачами
   const openTasksModal = async () => {
     console.log("openTasksModal called, createdAct:", createdAct);
     setIsTasksModalOpen(true);
 
-    // Если акт уже создан, загружаем задачи с сервера
     if (createdAct?.id) {
       await fetchTasks();
     }
@@ -179,14 +173,13 @@ export default function CreateAct() {
       return;
     }
 
-    // Если акт еще не создан, добавляем задачу в store
     if (!createdAct?.id) {
       const localTask = {
         id: `temp-${Date.now()}`,
         title: newTaskTitle,
         isCompleted: false,
         createdAt: new Date().toISOString(),
-        local: true, // флаг для отличия локальных задач
+        local: true,
       };
       addCreateActTask(localTask);
       setNewTaskTitle("");
@@ -194,7 +187,6 @@ export default function CreateAct() {
       return;
     }
 
-    // Если акт создан, отправляем на сервер
     try {
       const response = await api.post(`/act/${createdAct.id}/tasks`, {
         title: newTaskTitle,
@@ -209,7 +201,6 @@ export default function CreateAct() {
   };
 
   const toggleTaskCompletion = async (taskId, currentStatus) => {
-    // Если задача локальная (не сохранена на сервере), обновляем в store
     const task = tasks.find((t) => t.id === taskId);
     if (task?.local) {
       updateCreateActTask(taskId, {
@@ -240,7 +231,6 @@ export default function CreateAct() {
   };
 
   const deleteTask = async (taskId) => {
-    // Если задача локальная, просто удаляем из store
     const task = tasks.find((t) => t.id === taskId);
     if (task?.local) {
       deleteCreateActTask(taskId);
@@ -260,7 +250,7 @@ export default function CreateAct() {
     }
   };
 
-  // Сохранение локальных задач на сервер после создания акта
+  // Saving local tasks to server after act creation
   const saveLocalTasksToServer = async (actId) => {
     const localTasks = tasks.filter((task) => task.local);
 
@@ -273,7 +263,6 @@ export default function CreateAct() {
     console.log("Act ID:", actId);
 
     try {
-      // Сохраняем каждую локальную задачу на сервер
       const savedTasks = await Promise.all(
         localTasks.map(async (task) => {
           try {
@@ -294,16 +283,13 @@ export default function CreateAct() {
         }),
       );
 
-      // Обновляем состояние в store, заменяя локальные задачи на сохраненные
       const savedTasksFiltered = savedTasks.filter((t) => t !== null);
 
       if (savedTasksFiltered.length > 0) {
-        // Удаляем старые локальные задачи
         savedTasksFiltered.forEach(({ oldId }) => {
           deleteCreateActTask(oldId);
         });
 
-        // Добавляем новые задачи с сервера
         savedTasksFiltered.forEach(({ newTask }) => {
           addCreateActTask(newTask);
         });
@@ -318,7 +304,7 @@ export default function CreateAct() {
     }
   };
 
-  // Функции для сохранения и восстановления состояния формы
+  // Functions for saving and restoring form state
   const saveFormState = () => {
     const formState = {
       title,
@@ -329,7 +315,6 @@ export default function CreateAct() {
       navigatorMethod,
       biddingTime,
       imagePreview,
-      // selectedSequelId управляется через стор, не сохраняем в localStorage
       timestamp: Date.now(),
     };
     localStorage.setItem("createActFormState", JSON.stringify(formState));
@@ -342,7 +327,6 @@ export default function CreateAct() {
       if (savedState) {
         const formState = JSON.parse(savedState);
         console.log("Parsed form state:", formState);
-        // Проверяем, что данные не старше 30 минут
         if (Date.now() - formState.timestamp < 30 * 60 * 1000) {
           console.log(
             "Restoring form state from localStorage (excluding selectedSequelId, managed by store)",
@@ -358,7 +342,6 @@ export default function CreateAct() {
           setBiddingTime(formState.biddingTime || 5);
           setImagePreview(formState.imagePreview || null);
 
-          // Восстанавливаем файл из base64 если он есть
           if (formState.imagePreview) {
             try {
               const restoredFile = base64ToFile(
@@ -371,8 +354,6 @@ export default function CreateAct() {
               console.error("Error restoring file from base64:", error);
             }
           }
-
-          // selectedSequelId теперь управляется через стор
         } else {
           console.log("Saved form state is too old, not restoring");
         }
@@ -384,16 +365,14 @@ export default function CreateAct() {
     }
   }, [base64ToFile]);
 
-  // Восстанавливаем состояние формы при загрузке компонента
   useEffect(() => {
     restoreFormState();
   }, [restoreFormState]);
 
-  // Сохраняем состояние формы при каждом изменении
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       saveFormState();
-    }, 500); // Дебаунс 500мс
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   });
@@ -432,7 +411,6 @@ export default function CreateAct() {
   };
 
   const handleCreateAct = async () => {
-    // Валидация
     if (!title.trim()) {
       alert("Please enter a title for your act");
       return;
@@ -444,7 +422,6 @@ export default function CreateAct() {
       return;
     }
 
-    // Подготавливаем данные для отправки
     console.log("Selected sequel ID before creating act:", selectedSequelId);
     console.log("Selected intro ID before creating act:", selectedIntroId);
     console.log("Selected outro ID before creating act:", selectedOutroId);
@@ -457,10 +434,10 @@ export default function CreateAct() {
       routeDestination ? true : false,
     );
 
-    // Формируем массив точек маршрута: начальная точка (order: 0) + выбранные точки
+    // Form route points array: starting point (order: 0) + selected points
     const formattedRoutePoints = [];
 
-    // Добавляем начальную точку с order: 0 если есть геолокация
+    // Add starting point with order: 0 if geolocation is available
     if (location) {
       formattedRoutePoints.push({
         latitude: location.latitude,
@@ -469,13 +446,13 @@ export default function CreateAct() {
       });
     }
 
-    // Добавляем остальные точки маршрута со сдвигом order на +1
+    // Add remaining route points with order offset +1
     if (routePoints && routePoints.length > 0) {
       routePoints.forEach((point) => {
         formattedRoutePoints.push({
           latitude: point.latitude,
           longitude: point.longitude,
-          order: point.order + 1, // Сдвигаем order на +1, так как 0 - это начальная точка
+          order: point.order + 1,
         });
       });
     }
@@ -486,26 +463,26 @@ export default function CreateAct() {
       format: formatType,
       heroMethods: heroMethod,
       navigatorMethods: navigatorMethod,
-      biddingTime: new Date(Date.now() + biddingTime * 60 * 1000).toISOString(), // Добавляем время в минутах к текущему времени
+      biddingTime: new Date(Date.now() + biddingTime * 60 * 1000).toISOString(),
       photo: selectedFile,
-      musicIds: selectedMusicIds.length > 0 ? selectedMusicIds : [], // Всегда отправляем массив, пустой если ничего не выбрано
+      musicIds: selectedMusicIds.length > 0 ? selectedMusicIds : [],
       ...(selectedSequelId !== null &&
-        selectedSequelId !== undefined && { sequelId: selectedSequelId }), // Добавляем sequelId если он выбран
+        selectedSequelId !== undefined && { sequelId: selectedSequelId }),
       ...(selectedIntroId !== null &&
-        selectedIntroId !== undefined && { introId: selectedIntroId }), // Добавляем introId если выбрано
+        selectedIntroId !== undefined && { introId: selectedIntroId }),
       ...(selectedOutroId !== null &&
-        selectedOutroId !== undefined && { outroId: selectedOutroId }), // Добавляем outroId если выбрано
+        selectedOutroId !== undefined && { outroId: selectedOutroId }),
       ...(location && {
         startLatitude: location.latitude,
         startLongitude: location.longitude,
-      }), // Добавляем стартовую позицию стримера из геолокации (для обратной совместимости)
+      }),
       ...(routeDestination && {
         destinationLatitude: routeDestination.latitude,
         destinationLongitude: routeDestination.longitude,
-      }), // Добавляем точку назначения если выбрана метка на карте (для обратной совместимости)
+      }),
       ...(formattedRoutePoints.length > 0 && {
         routePoints: formattedRoutePoints,
-      }), // Добавляем массив точек маршрута
+      }),
     };
 
     console.log("Creating act with data:", actData);
@@ -522,10 +499,8 @@ export default function CreateAct() {
       console.log("Act created successfully:", result);
       console.log("result.actId:", result.actId);
 
-      // Очищаем сохраненное состояние формы
       localStorage.removeItem("createActFormState");
 
-      // Очищаем выбранные элементы из стора
       clearSelectedSequel();
       clearSelectedIntro();
       clearSelectedOutro();
@@ -533,7 +508,6 @@ export default function CreateAct() {
 
       console.log("Tasks before saving to server:", tasks);
 
-      // Сохраняем данные созданного act
       const newActId = result.actId || result.id;
       console.log("Setting createdAct with id:", newActId);
 
@@ -542,10 +516,8 @@ export default function CreateAct() {
         title: title.trim(),
       });
 
-      // Сохраняем локальные задачи на сервер
       await saveLocalTasksToServer(newActId);
 
-      // Показываем компонент стрима
       setShowStream(true);
     }
   };
@@ -553,14 +525,11 @@ export default function CreateAct() {
   const handleStopStream = () => {
     setShowStream(false);
     setCreatedAct(null);
-    clearRoute(); // Очищаем маршрут из стора
-    // Очищаем tasks из store после завершения стрима
+    clearRoute();
     clearCreateActForm();
-    // Перенаправляем на страницу актов
     navigate("/acts");
   };
 
-  // Если показываем стрим, рендерим StreamHost
   if (showStream && createdAct) {
     return (
       <StreamHost
@@ -610,7 +579,6 @@ export default function CreateAct() {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    // Сбрасываем состояния при закрытии
     setSequelTitle("");
     setSequelEpisodes("");
     setSequelPhoto(null);
@@ -636,7 +604,6 @@ export default function CreateAct() {
   const handleCreateSequel = async (e) => {
     e.preventDefault();
 
-    // Валидация
     if (!sequelTitle.trim()) {
       alert("Please enter a sequel title");
       return;
@@ -661,10 +628,8 @@ export default function CreateAct() {
     const result = await createSequel(sequelData);
 
     if (result) {
-      // Успешное создание сиквела
       toast.success("Sequel created successfully!");
       closeModal();
-      // Сбрасываем форму
       setSequelTitle("");
       setSequelEpisodes("");
       setSequelPhoto(null);
@@ -1056,7 +1021,6 @@ export default function CreateAct() {
         </button>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div className={styles.errorOverlay} onClick={() => resetState()}>
           <div
@@ -1090,7 +1054,6 @@ export default function CreateAct() {
         </div>
       )}
 
-      {/* Показываем успех */}
       {success && (
         <div className={styles.successContainer}>
           <div className={styles.successIcon}>
@@ -1118,7 +1081,6 @@ export default function CreateAct() {
         </div>
       )}
 
-      {/* Modal */}
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -1188,7 +1150,6 @@ export default function CreateAct() {
                   </div>
                 </div>
 
-                {/* Показываем ошибки создания сиквела */}
                 {sequelError && (
                   <div
                     style={{
@@ -1201,7 +1162,6 @@ export default function CreateAct() {
                   </div>
                 )}
 
-                {/* Показываем успех создания сиквела */}
                 {sequelSuccess && (
                   <div
                     style={{
@@ -1232,7 +1192,6 @@ export default function CreateAct() {
         </div>
       )}
 
-      {/* Tasks Modal */}
       {isTasksModalOpen && (
         <div className={styles.modalOverlay} onClick={closeTasksModal}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -1243,7 +1202,6 @@ export default function CreateAct() {
 
             <div className={styles.modalContent}>
               <div className={styles.tasksContainer}>
-                {/* New Task Input */}
                 <div className={styles.newTaskForm}>
                   <input
                     type="text"
@@ -1266,7 +1224,6 @@ export default function CreateAct() {
                   </button>
                 </div>
 
-                {/* Tasks List */}
                 <div className={styles.tasksList}>
                   {loadingTasks ? (
                     <div className={styles.loadingTasks}>Loading tasks...</div>
@@ -1297,7 +1254,6 @@ export default function CreateAct() {
         </div>
       )}
 
-      {/* Map Modal */}
       {isMapModalOpen && (
         <div
           className={styles.modalOverlay}
@@ -1371,7 +1327,6 @@ export default function CreateAct() {
                       }}
                     />
                   )}
-                  {/* Отображаем все точки маршрута с номерами */}
                   {routePoints.map((point, index) => {
                     const icon = L.divIcon({
                       className: "custom-marker-icon",
@@ -1403,7 +1358,6 @@ export default function CreateAct() {
                 </MapContainer>
               </div>
 
-              {/* Список точек маршрута */}
               {routePoints.length > 0 && (
                 <div style={{ marginTop: "12px", fontSize: "12px" }}>
                   <strong>Route Points ({routePoints.length}):</strong>
@@ -1489,7 +1443,7 @@ export default function CreateAct() {
   );
 }
 
-// Компонент для обработки кликов по карте
+// Component for handling map clicks
 function LocationSelector({
   setRouteDestination,
   setRouteCoordinates,
@@ -1505,17 +1459,13 @@ function LocationSelector({
       };
       console.log("Map clicked, adding route point:", destination);
 
-      // Добавляем точку в массив routePoints
       addRoutePoint(destination);
 
-      // Также сохраняем как routeDestination для обратной совместимости
       setRouteDestination(destination);
       console.log("Start location:", startLocation);
 
-      // Получаем маршрут через все точки
       if (startLocation) {
         try {
-          // Формируем список всех точек: начальная + все добавленные + новая
           const allPoints = [
             startLocation,
             ...routePoints.map((p) => ({
@@ -1525,7 +1475,6 @@ function LocationSelector({
             destination,
           ];
 
-          // Формируем строку координат для OSRM API
           const coordsString = allPoints
             .map((p) => `${p.longitude},${p.latitude}`)
             .join(";");

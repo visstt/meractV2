@@ -1,8 +1,6 @@
 import { io } from "socket.io-client";
 
-/**
- * WebSocket клиент для получения уведомлений о достижениях в реальном времени
- */
+
 class AchievementSocket {
   constructor() {
     this.socket = null;
@@ -11,13 +9,8 @@ class AchievementSocket {
     this.currentStreamId = null;
   }
 
-  /**
-   * Подключиться к WebSocket серверу
-   * @param {number} userId - ID текущего пользователя
-   * @param {number} streamId - ID стрима (опционально, для зрителей)
-   */
+
   connect(userId, streamId = null) {
-    // Если уже подключены с теми же параметрами, не переподключаемся
     if (
       this.socket?.connected &&
       this.currentUserId === userId &&
@@ -27,7 +20,6 @@ class AchievementSocket {
       return;
     }
 
-    // Если параметры изменились, переподключаемся
     if (
       this.socket?.connected &&
       (this.currentUserId !== userId || this.currentStreamId !== streamId)
@@ -49,71 +41,61 @@ class AchievementSocket {
       reconnectionAttempts: 5,
     });
 
-    // Системные события
     this.socket.on("connect", () => {
-      console.log("✅ Achievement socket connected");
+      console.log("Achievement socket connected");
       console.log("Listening for userId:", userId, "streamId:", streamId);
     });
 
     this.socket.on("disconnect", (reason) => {
-      console.log("❌ Achievement socket disconnected:", reason);
+      console.log("Achievement socket disconnected:", reason);
     });
 
     this.socket.on("connect_error", (error) => {
-      console.error("🔴 Achievement socket connection error:", error);
+      console.error("Achievement socket connection error:", error);
     });
 
-    // Слушаем ВСЕ события для отладки
     this.socket.onAny((eventName, ...args) => {
-      console.log("🔊 Socket event received:", eventName, args);
+      console.log("Socket event received:", eventName, args);
     });
 
-    // Подписываемся на персональные уведомления
     if (userId) {
       const personalChannel = `achievement:${userId}`;
-      console.log("🎯 Subscribing to personal channel:", personalChannel);
+      console.log("Subscribing to personal channel:", personalChannel);
       this.socket.on(personalChannel, (data) => {
-        console.log("🏆 Personal achievement received:", data);
+        console.log("Personal achievement received:", data);
         this.notifyListeners("personal", data);
       });
     }
 
-    // Подписываемся на глобальные уведомления
-    console.log("🎯 Subscribing to global channel: achievement:global");
+    console.log("Subscribing to global channel: achievement:global");
     this.socket.on("achievement:global", (data) => {
-      console.log("🌍 Global achievement received:", data);
+      console.log("Global achievement received:", data);
       this.notifyListeners("global", data);
     });
 
-    // Подписываемся на уведомления стрима (для зрителей и стримера)
     if (streamId) {
       const streamChannel = `achievement:stream:${streamId}`;
-      console.log("🎯 Subscribing to stream channel:", streamChannel);
+      console.log("Subscribing to stream channel:", streamChannel);
 
       this.socket.on(streamChannel, (data) => {
-        console.log("📺 Stream achievement received:", {
+        console.log("Stream achievement received:", {
           data,
           currentUserId: userId,
           dataUserId: data.userId,
           dataUserIdFromUser: data.user?.id,
         });
 
-        // Если это награждение текущего пользователя, показываем как персональное
         if (data.userId === userId || data.user?.id === userId) {
-          console.log("🏆 This achievement is for current user");
+          console.log("This achievement is for current user");
           this.notifyListeners("personal", data);
         } else {
-          // Иначе показываем как глобальное уведомление для зрителей
-          console.log("🌍 This achievement is for another user");
+          console.log("This achievement is for another user");
           this.notifyListeners("global", data);
         }
       });
     }
   }
 
-  /**
-   * Отключиться от WebSocket сервера
-   */
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
@@ -125,40 +107,25 @@ class AchievementSocket {
     }
   }
 
-  /**
-   * Добавить слушателя уведомлений
-   * @param {string} type - Тип уведомлений ('personal' или 'global')
-   * @param {Function} callback - Функция обратного вызова
-   * @returns {Function} - Функция для отписки
-   */
+
   addListener(type, callback) {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
     this.listeners.get(type).add(callback);
 
-    // Возвращаем функцию для отписки
     return () => {
       this.removeListener(type, callback);
     };
   }
 
-  /**
-   * Удалить слушателя
-   * @param {string} type - Тип уведомлений
-   * @param {Function} callback - Функция обратного вызова
-   */
+
   removeListener(type, callback) {
     if (this.listeners.has(type)) {
       this.listeners.get(type).delete(callback);
     }
   }
 
-  /**
-   * Уведомить всех слушателей о новом событии
-   * @param {string} type - Тип события
-   * @param {Object} data - Данные события
-   */
   notifyListeners(type, data) {
     if (this.listeners.has(type)) {
       this.listeners.get(type).forEach((callback) => {
@@ -171,14 +138,10 @@ class AchievementSocket {
     }
   }
 
-  /**
-   * Проверить статус подключения
-   * @returns {boolean}
-   */
+
   isConnected() {
     return this.socket?.connected || false;
   }
 }
 
-// Экспортируем синглтон
 export const achievementSocket = new AchievementSocket();

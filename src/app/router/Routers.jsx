@@ -26,13 +26,11 @@ import StreamPage from "../../pages/stream/StreamPage";
 import StreamHostPage from "../../pages/streamHost/StreamHostPage";
 import { useAuthStore } from "../../shared/stores/authStore";
 
-// Component for smart redirect with Google OAuth handling
 const HomeRedirect = () => {
   const [searchParams] = useSearchParams();
   const { isAuthenticated, login } = useAuthStore();
 
   useEffect(() => {
-    // Проверяем наличие данных пользователя в query параметрах (после Google OAuth)
     const userParam = searchParams.get("user");
 
     if (userParam) {
@@ -40,11 +38,8 @@ const HomeRedirect = () => {
         const userData = JSON.parse(decodeURIComponent(userParam));
         console.log("Google OAuth user data received:", userData);
 
-        // Сохраняем пользователя в store
-        // Токены уже установлены через cookies бэкендом
         login(userData);
 
-        // Удаляем параметр из URL для чистоты
         window.history.replaceState({}, document.title, "/acts");
       } catch (error) {
         console.error("Error parsing user data from Google OAuth:", error);

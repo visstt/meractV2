@@ -11,7 +11,6 @@ export default function Login() {
   const { signIn, loading, error, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Перенаправляем если пользователь уже авторизован
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/acts");

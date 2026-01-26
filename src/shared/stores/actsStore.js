@@ -5,7 +5,6 @@ export const useActsStore = create(
   persist(
     (set, get) => ({
       acts: [
-        // Моковая карточка - оставляем как есть
         {
           id: 1,
           title: "Voices in the Crowd",
@@ -18,19 +17,17 @@ export const useActsStore = create(
           upvotes: 12,
           downvotes: 12,
           liveIn: "2h 15m",
-          isMock: true, // Флаг что это моковая карточка
+          isMock: true, 
         },
       ],
 
-      // Хранение задач для создаваемого акта
       createActFormState: {
         tasks: [],
       },
 
-      // Добавить новый акт
       addAct: (actData) => {
         const newAct = {
-          id: Date.now(), // Простой ID на основе времени
+          id: Date.now(), 
           title: actData.title,
           description: actData.sequel || "No description provided",
           type: actData.type,
@@ -39,9 +36,8 @@ export const useActsStore = create(
           navigatorMethods: actData.navigatorMethods,
           biddingTime: actData.biddingTime,
           photo: actData.photo,
-          imageUrl: actData.imageUrl, // URL для отображения изображения
+          imageUrl: actData.imageUrl, 
           userId: actData.userId,
-          // Дефолтные значения для карточки
           navigator: "To be selected",
           heroes: [],
           location: "Unknown location",
@@ -57,17 +53,14 @@ export const useActsStore = create(
         }));
       },
 
-      // Получить все акты
       getActs: () => get().acts,
 
-      // Очистить акты (кроме моковой)
       clearActs: () => {
         set((state) => ({
           acts: state.acts.filter((act) => act.isMock),
         }));
       },
 
-      // Методы для управления tasks в форме создания акта
       setCreateActTasks: (tasks) => {
         set((state) => ({
           createActFormState: {

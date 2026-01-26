@@ -19,22 +19,19 @@ function App() {
   const { logout, isAuthenticated, setLocation } = useAuthStore();
 
   useEffect(() => {
-    // Проверяем наличие токенов в cookies при загрузке
     const accessToken = getCookie("access_token");
     const refreshToken = getCookie("refresh_token");
 
-    // Если пользователь считается авторизованным, но токенов нет - выходим
     if (isAuthenticated && !accessToken && !refreshToken) {
-      console.log("🚪 No tokens in cookies, logging out...");
+      console.log(" No tokens in cookies, logging out...");
       logout();
       window.location.href = "/login";
     }
   }, [isAuthenticated, logout]);
 
-  // Запрашиваем геолокацию при входе в приложение
   useEffect(() => {
     if (isAuthenticated && navigator.geolocation) {
-      console.log("📍 Запрос доступа к геолокации...");
+      console.log(" Запрос доступа к геолокации...");
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -43,12 +40,11 @@ function App() {
             longitude: position.coords.longitude,
           };
 
-          console.log("✅ Геолокация получена:", locationData);
+          console.log(" Геолокация получена:", locationData);
           setLocation(locationData);
         },
         (error) => {
-          console.error("❌ Ошибка получения геолокации:", error.message);
-          // Не блокируем приложение, если пользователь отказал в доступе
+          console.error(" Ошибка получения геолокации:", error.message);
         },
         {
           enableHighAccuracy: true,

@@ -2,15 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import styles from "./AchievementNotification.module.css";
 
-/**
- * Компонент уведомления о получении достижения
- * @param {Object} props
- * @param {Object} props.achievement - Данные достижения
- * @param {string} props.type - Тип уведомления ('personal' или 'global')
- * @param {string} props.userName - Имя пользователя (для глобальных уведомлений)
- * @param {Function} props.onClose - Callback для закрытия уведомления
- * @param {number} props.duration - Время показа уведомления в мс (по умолчанию 5000)
- */
+
 export default function AchievementNotification({
   achievement,
   type = "personal",
@@ -22,14 +14,12 @@ export default function AchievementNotification({
 
   const handleClose = useCallback(() => {
     setIsClosing(true);
-    // Ждем окончания анимации перед вызовом onClose
     setTimeout(() => {
       onClose?.();
     }, 300);
   }, [onClose]);
 
   useEffect(() => {
-    // Автоматически закрываем уведомление через заданное время
     const timer = setTimeout(() => {
       handleClose();
     }, duration);

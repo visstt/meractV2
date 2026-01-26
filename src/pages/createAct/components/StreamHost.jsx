@@ -66,12 +66,10 @@ const StreamHost = ({
   const [showIntro, setShowIntro] = useState(false);
   const [showOutro, setShowOutro] = useState(false);
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0);
-  const [facingMode, setFacingMode] = useState("user"); // "user" = front camera, "environment" = back camera
+  const [facingMode, setFacingMode] = useState("user"); 
 
-  // Tasks modal state
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
 
-  // Map modal state
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [localStartLocation, setLocalStartLocation] = useState(
     startLocation || null,
@@ -99,9 +97,8 @@ const StreamHost = ({
     fetchMessages,
   } = useChat(actId);
 
-  // Логирование для отладки чата
   useEffect(() => {
-    console.log("🎥 StreamHost чат:", {
+    console.log("StreamHost чат:", {
       actId,
       chatMessagesCount: chatMessages?.length || 0,
       isConnected,
@@ -110,17 +107,16 @@ const StreamHost = ({
   }, [actId, chatMessages, isConnected]);
 
   const localVideoRef = useRef(null);
-  const sourceVideoRef = useRef(null); // Скрытое видео для обработки
+  const sourceVideoRef = useRef(null);
   const introVideoRef = useRef(null);
   const outroVideoRef = useRef(null);
   const musicAudioRef = useRef(null);
   const clientRef = useRef(null);
   const localTracksRef = useRef({});
-  const effectsProcessorRef = useRef(null); // Процессор эффектов
-  const isInitializingRef = useRef(false); // Flag to prevent multiple initialization
-  const isStreamingStartedRef = useRef(false); // Flag to prevent multiple stream start
+  const effectsProcessorRef = useRef(null); 
+  const isInitializingRef = useRef(false); 
+  const isStreamingStartedRef = useRef(false); 
 
-  // Get user from auth store
   const { user } = useAuthStore();
 
   // Extract user ID (use user.id first, then from token)
@@ -131,21 +127,17 @@ const StreamHost = ({
       const tokenData = parseJWT(user.token);
       return tokenData?.sub || tokenData?.id || 999999;
     }
-    return 999999; // Fixed fallback
+    return 999999; 
   }, [user]);
 
-  // Create UNIQUE UID for streamer - генерируется только один раз при монтировании
-  // Формула: (actId * 1000000) + (baseUserId * 10) + randomComponent + role
-  // randomComponent гарантирует уникальность при каждом запуске
   const userId = useMemo(() => {
-    const randomComponent = Math.floor(Math.random() * 100); // 0-99
+    const randomComponent = Math.floor(Math.random() * 100); 
     const uid = actId
       ? parseInt(actId) * 1000000 + baseUserId * 100 + randomComponent
       : Math.floor(Date.now() / 1000) * 1000000 +
         baseUserId * 100 +
         randomComponent;
 
-    // Сохраняем UID сразу после генерации
     window.__STREAM_UIDS__ = window.__STREAM_UIDS__ || {};
     window.__STREAM_UIDS__[`${uid}_host`] = Date.now();
 
@@ -191,7 +183,7 @@ const StreamHost = ({
       if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
         delete window.__STREAM_UIDS__[uidKey];
         console.log(
-          "%c🗑️ UID cleared on unmount: " + userId,
+          "UID cleared on unmount: " + userId,
           "color: #FFA500; font-weight: bold;",
         );
       }
@@ -222,7 +214,6 @@ const StreamHost = ({
   useEffect(() => {
     // Get token for stream
     const getStreamToken = async () => {
-      // Check if actId is valid
       if (!actId || actId === "undefined") {
         console.error("Cannot initialize stream: actId is invalid", actId);
         return;
@@ -239,7 +230,7 @@ const StreamHost = ({
         "color: #00FF00; font-weight: bold; font-size: 16px;",
       );
       console.log(
-        "%c║              ✅  STARTING STREAM WITH UNIQUE UID ✅             ║",
+        "%c║               STARTING STREAM WITH UNIQUE UID              ║",
         "color: #00FF00; font-weight: bold; font-size: 20px; background: #000; padding: 10px;",
       );
       console.log(
@@ -263,7 +254,7 @@ const StreamHost = ({
           userId,
         );
 
-        // Get token from your backend for publisher (streamer)
+        // Get token from backend for publisher (streamer)
         const response = await api.get(
           `/act/token/${channelName}/PUBLISHER/uid?uid=${userId}&expiry=3600`,
         );
@@ -297,13 +288,11 @@ const StreamHost = ({
       stopCameraPreview();
       stopBackgroundMusic();
 
-      // Cleanup effects processor
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
         effectsProcessorRef.current = null;
       }
 
-      // Cleanup source video element
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = null;
         if (sourceVideoRef.current.parentNode) {
@@ -312,9 +301,8 @@ const StreamHost = ({
         sourceVideoRef.current = null;
       }
     };
-  }, [actId, channelName, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [actId, channelName, userId]);
 
-  // Build route data from `actData` when available. Prefer explicit `routePoints`.
   useEffect(() => {
     if (!actData) return;
 
@@ -341,7 +329,6 @@ const StreamHost = ({
       if (actData.startLatitude && actData.startLongitude) {
         (async () => {
           try {
-            // Build waypoints string for OSRM: start;point1;point2;...;lastPoint
             const waypoints = [];
             waypoints.push(`${actData.startLongitude},${actData.startLatitude}`);
             
@@ -369,7 +356,6 @@ const StreamHost = ({
       actData.destinationLatitude &&
       actData.destinationLongitude
     ) {
-      // Fallback to original destination if no routePoints
       setLocalDestinationLocation({
         latitude: actData.destinationLatitude,
         longitude: actData.destinationLongitude,
@@ -378,13 +364,11 @@ const StreamHost = ({
       setLocalDestinationLocation(destinationLocation);
     }
 
-    // Fallback to OSRM route if no explicit routePoints
     if (
       !(actData.routePoints && Array.isArray(actData.routePoints) && actData.routePoints.length > 0) &&
       (actData.startLatitude && actData.startLongitude) &&
       (actData.destinationLatitude && actData.destinationLongitude)
     ) {
-      // Fallback to OSRM route if no explicit routePoints
       (async () => {
         try {
           const response = await fetch(
@@ -402,12 +386,10 @@ const StreamHost = ({
     }
   }, [actData, startLocation, destinationLocation]);
 
-  // Function to start camera preview
   const startCameraPreview = async () => {
     try {
       console.log("Starting camera preview...");
 
-      // Check permissions and create preview
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
@@ -418,7 +400,6 @@ const StreamHost = ({
         console.log("Camera preview started successfully");
       }
 
-      // Save stream for later stopping
       localTracksRef.current.previewStream = stream;
     } catch (err) {
       console.error("Error starting camera preview:", err);
@@ -426,7 +407,6 @@ const StreamHost = ({
     }
   };
 
-  // Function to stop camera preview
   const stopCameraPreview = () => {
     try {
       if (localTracksRef.current.previewStream) {
@@ -458,14 +438,12 @@ const StreamHost = ({
       return;
     }
 
-    // Sort music by order field if available
     const sortedMusic = [...actData.musics].sort((a, b) => {
       const orderA = a.order ?? a.ActMusic?.order ?? 0;
       const orderB = b.order ?? b.ActMusic?.order ?? 0;
       return orderA - orderB;
     });
 
-    // Play first music track
     const firstMusic = sortedMusic[0];
     const musicUrl = firstMusic.fileName || firstMusic.music?.fileName;
 
@@ -477,10 +455,9 @@ const StreamHost = ({
     console.log("Starting background music:", musicUrl);
 
     musicAudio.src = musicUrl;
-    musicAudio.volume = 0.25; // Set volume to 25% to not overpower voice
-    musicAudio.loop = false; // We'll handle loop manually to cycle through tracks
+    musicAudio.volume = 0.25; 
+    musicAudio.loop = false; 
 
-    // When current track ends, play next one
     musicAudio.onended = () => {
       const nextIndex = (currentMusicIndex + 1) % sortedMusic.length;
       setCurrentMusicIndex(nextIndex);
@@ -494,7 +471,6 @@ const StreamHost = ({
         .catch((err) => console.error("Error playing next music:", err));
     };
 
-    // Добавляем обработчики событий для отладки
     musicAudio.onerror = (e) => {
       console.error("Music playback error:", e);
       console.error("Music source:", musicAudio.src);
@@ -511,10 +487,10 @@ const StreamHost = ({
     musicAudio
       .play()
       .then(() => {
-        console.log("✅ Background music started successfully");
+        console.log("Background music started successfully");
       })
       .catch((err) => {
-        console.error("❌ Error playing background music:", err);
+        console.error("Error playing background music:", err);
         console.error("Music data:", firstMusic);
         console.error("Music URL:", musicUrl);
       });
@@ -555,13 +531,11 @@ const StreamHost = ({
         }
 
         introVideo.src = introUrl;
-        introVideo.muted = false; // Включаем звук из видео
+        introVideo.muted = false;
 
-        // Ждем когда видео начнет воспроизводиться
         await introVideo.play();
         console.log("Intro video playing");
 
-        // Теперь создаем stream из видео
         const stream = introVideo.captureStream();
         const videoTrack = stream.getVideoTracks()[0];
         const audioTracks = stream.getAudioTracks();
@@ -569,7 +543,6 @@ const StreamHost = ({
         if (!videoTrack) {
           console.error("Failed to capture video track from intro");
           setShowIntro(false);
-          // Публикуем микрофон если intro не удался
           await client.publish([audioTrack]);
           resolve();
           return;
@@ -579,7 +552,6 @@ const StreamHost = ({
           mediaStreamTrack: videoTrack,
         });
 
-        // Если в intro есть аудио, используем его, иначе публикуем микрофон
         if (audioTracks.length > 0) {
           const agoraAudioTrack = AgoraRTC.createCustomAudioTrack({
             mediaStreamTrack: audioTracks[0],
@@ -594,7 +566,6 @@ const StreamHost = ({
             agoraVideoTrack.close();
             agoraAudioTrack.stop();
             agoraAudioTrack.close();
-            // Публикуем микрофон после intro
             await client.publish([audioTrack]);
             setShowIntro(false);
             resolve();
@@ -613,7 +584,6 @@ const StreamHost = ({
           };
         }
 
-        // Отображаем локально
         if (localVideoRef.current) {
           agoraVideoTrack.play(localVideoRef.current);
         }
@@ -640,7 +610,6 @@ const StreamHost = ({
       try {
         console.log("Playing outro video:", outroUrl);
 
-        // Останавливаем текущий video track камеры
         if (localTracksRef.current.videoTrack) {
           await client.unpublish([localTracksRef.current.videoTrack]);
           localTracksRef.current.videoTrack.stop();
@@ -659,10 +628,8 @@ const StreamHost = ({
         outroVideo.src = outroUrl;
         outroVideo.muted = false;
 
-        // Ждем когда видео начнет воспроизводиться
         await outroVideo.play();
 
-        // Теперь создаем stream из видео
         const stream = outroVideo.captureStream();
         const videoTrack = stream.getVideoTracks()[0];
 
@@ -677,11 +644,9 @@ const StreamHost = ({
           mediaStreamTrack: videoTrack,
         });
 
-        // Публикуем outro video track
         await client.publish([agoraVideoTrack]);
         console.log("Outro video track published");
 
-        // Отображаем локально
         if (localVideoRef.current) {
           agoraVideoTrack.play(localVideoRef.current);
         }
@@ -715,7 +680,6 @@ const StreamHost = ({
       console.log("Starting stream for act:", actId, "channel:", channelName);
       console.log("Act data available:", actData);
 
-      // Stop camera preview
       stopCameraPreview();
 
       // Create Agora client
@@ -757,15 +721,13 @@ const StreamHost = ({
       // After intro, start camera stream with effects
       console.log("Creating camera track with facingMode:", facingMode);
 
-      // Создаем MediaStream из камеры напрямую
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facingMode },
-        audio: false, // Аудио уже есть из audioTrack
+        audio: false, 
       });
 
       const videoTrackNative = mediaStream.getVideoTracks()[0];
 
-      // Создаем скрытый video элемент для исходного видео
       if (!sourceVideoRef.current) {
         sourceVideoRef.current = document.createElement("video");
         sourceVideoRef.current.style.display = "none";
@@ -777,35 +739,30 @@ const StreamHost = ({
       sourceVideoRef.current.srcObject = mediaStream;
       await sourceVideoRef.current.play();
 
-      console.log("🎨 Applying video effects...");
+      console.log("Applying video effects...");
 
-      // Создаем процессор эффектов
       effectsProcessorRef.current = new VideoEffectsProcessor(
         sourceVideoRef.current,
         {
           vignette: true,
-          colorFilter: "warm", // 'warm', 'cold', 'none'
+          colorFilter: "warm", 
           vignetteIntensity: 0.6,
           colorIntensity: 0.3,
         },
       );
 
-      // Запускаем обработку
       effectsProcessorRef.current.start();
 
-      // Получаем stream с эффектами
       const processedStream = effectsProcessorRef.current.getStream(30);
       const processedVideoTrack = processedStream.getVideoTracks()[0];
 
-      // Создаем Agora video track из обработанного stream
       const videoTrack = AgoraRTC.createCustomVideoTrack({
         mediaStreamTrack: processedVideoTrack,
       });
 
       localTracksRef.current.videoTrack = videoTrack;
-      localTracksRef.current.nativeVideoTrack = videoTrackNative; // Сохраняем нативный трек
+      localTracksRef.current.nativeVideoTrack = videoTrackNative; 
 
-      // Play local video (показываем обработанное видео)
       if (localVideoRef.current) {
         console.log("Playing local video with effects...");
         videoTrack.play(localVideoRef.current);
@@ -815,7 +772,7 @@ const StreamHost = ({
       console.log("Publishing camera track with effects...");
       await client.publish([videoTrack]);
 
-      console.log("✅ Stream started successfully with effects");
+      console.log("Stream started successfully with effects");
     } catch (err) {
       console.error("Error starting stream:", err);
       setError("Failed to start stream: " + err.message);
@@ -837,17 +794,16 @@ const StreamHost = ({
       localTracksRef.current.videoTrack.stop();
       localTracksRef.current.videoTrack.close();
 
-      // Остановить нативный трек
+      // Stop native track
       if (localTracksRef.current.nativeVideoTrack) {
         localTracksRef.current.nativeVideoTrack.stop();
       }
 
-      // Остановить процессор эффектов
+      // Stop effects processor
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
       }
 
-      // Создаем новый MediaStream из камеры
       console.log("Creating new camera stream with facingMode:", newFacingMode);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: newFacingMode },
@@ -856,13 +812,11 @@ const StreamHost = ({
 
       const videoTrackNative = mediaStream.getVideoTracks()[0];
 
-      // Обновляем исходное видео
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = mediaStream;
         await sourceVideoRef.current.play();
       }
 
-      // Создаем новый процессор эффектов
       effectsProcessorRef.current = new VideoEffectsProcessor(
         sourceVideoRef.current,
         {
@@ -875,11 +829,10 @@ const StreamHost = ({
 
       effectsProcessorRef.current.start();
 
-      // Получаем обработанный stream
       const processedStream = effectsProcessorRef.current.getStream(30);
       const processedVideoTrack = processedStream.getVideoTracks()[0];
 
-      // Создаем Agora track
+      // Create Agora track
       const newVideoTrack = AgoraRTC.createCustomVideoTrack({
         mediaStreamTrack: processedVideoTrack,
       });
@@ -905,7 +858,7 @@ const StreamHost = ({
       // Update state
       setFacingMode(newFacingMode);
       console.log(
-        "✅ Camera switched successfully to:",
+        "Camera switched successfully to:",
         newFacingMode,
         "with effects",
       );
@@ -953,7 +906,6 @@ const StreamHost = ({
     const newVolume = parseInt(e.target.value);
     setMusicVolume(newVolume);
     console.log("Volume changed to:", newVolume);
-    // Apply volume to music audio if playing
     if (musicAudioRef.current) {
       musicAudioRef.current.volume = newVolume / 100;
     }
@@ -984,15 +936,12 @@ const StreamHost = ({
     try {
       console.log("Stopping stream for act:", actId);
 
-      // Stop background music before outro
       stopBackgroundMusic();
 
-      // Play outro before stopping if available
       if (actData?.outro?.fileName && clientRef.current) {
         await playOutroStream(clientRef.current);
       }
 
-      // Stop and close tracks
       if (localTracksRef.current.audioTrack) {
         localTracksRef.current.audioTrack.stop();
         localTracksRef.current.audioTrack.close();
@@ -1002,19 +951,16 @@ const StreamHost = ({
         localTracksRef.current.videoTrack.close();
       }
 
-      // Stop native video track
       if (localTracksRef.current.nativeVideoTrack) {
         localTracksRef.current.nativeVideoTrack.stop();
         localTracksRef.current.nativeVideoTrack = null;
       }
 
-      // Stop effects processor
       if (effectsProcessorRef.current) {
         effectsProcessorRef.current.stop();
         effectsProcessorRef.current = null;
       }
 
-      // Remove and cleanup source video element
       if (sourceVideoRef.current) {
         sourceVideoRef.current.srcObject = null;
         if (sourceVideoRef.current.parentNode) {
@@ -1023,7 +969,6 @@ const StreamHost = ({
         sourceVideoRef.current = null;
       }
 
-      // Leave channel
       if (clientRef.current) {
         await clientRef.current.leave();
       }
@@ -1033,12 +978,10 @@ const StreamHost = ({
       if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
         delete window.__STREAM_UIDS__[uidKey];
         console.log(
-          "%c🗑️ UID cleared from conflict detection: " + userId,
-          "color: #FFA500; font-weight: bold;",
+          "UID cleared from conflict detection: " + userId,
         );
       }
 
-      // Clear references
       localTracksRef.current = {};
       clientRef.current = null;
 
@@ -1055,19 +998,16 @@ const StreamHost = ({
         }
       } catch (apiError) {
         console.error("Error sending stop-act request:", apiError);
-        // Don't block the UI flow if API fails
       }
 
       setIsStreaming(false);
 
-      // Notify parent component
       if (onStopStream) {
         onStopStream();
       }
 
       console.log("Stream stopped successfully");
 
-      // Camera and microphone are now fully stopped; do not start preview again
     } catch (err) {
       console.error("Error stopping stream:", err);
       setError("Failed to stop stream: " + err.message);
@@ -1116,7 +1056,6 @@ const StreamHost = ({
               )}
           </div>
           <div className={styles.videoContainer}>
-            {/* Hidden intro video for capture */}
             <video
               ref={introVideoRef}
               crossOrigin="anonymous"
@@ -1124,7 +1063,6 @@ const StreamHost = ({
               style={{ display: "none" }}
             />
 
-            {/* Hidden outro video for capture */}
             <video
               ref={outroVideoRef}
               crossOrigin="anonymous"
@@ -1132,14 +1070,12 @@ const StreamHost = ({
               style={{ display: "none" }}
             />
 
-            {/* Hidden audio element for background music */}
             <audio
               ref={musicAudioRef}
               crossOrigin="anonymous"
               style={{ display: "none" }}
             />
 
-            {/* Main stream video */}
             <div
               ref={localVideoRef}
               style={{
@@ -1203,7 +1139,6 @@ const StreamHost = ({
             </p>
           </div>
 
-          {/* Chat Section */}
           <div className={styles.chatSection}>
             <div className={styles.chatHeader}>
               <h3>Stream Chat</h3>
@@ -1261,7 +1196,6 @@ const StreamHost = ({
         </>
       )}
 
-      {/* Tasks Modal */}
       {isTasksModalOpen && (
         <div
           className={styles.modalOverlay}
@@ -1325,7 +1259,6 @@ const StreamHost = ({
         </div>
       )}
 
-      {/* Map Modal */}
       {isMapModalOpen && (
         <div
           className={styles.modalOverlay}
@@ -1386,13 +1319,11 @@ const StreamHost = ({
                     }}
                   />
                 )}
-                {/* Render route points with numbered markers */}
                 {actData?.routePoints && actData.routePoints.length > 0 &&
                   actData.routePoints
                     .slice()
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
                     .map((pt) => {
-                      // Skip if this point matches start location (to avoid duplicate)
                       const isStartPoint =
                         localStartLocation &&
                         Math.abs(pt.latitude - localStartLocation.latitude) < 0.0001 &&
@@ -1433,7 +1364,6 @@ const StreamHost = ({
         </div>
       )}
 
-      {/* Music Controls Modal */}
       {showMusicControls && (
         <div
           className={styles.modalOverlay}

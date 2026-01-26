@@ -148,7 +148,6 @@
   color: #ccc;
 }
 
-/* Chat Container */
 .chatContainer {
   position: absolute;
   left: 16px;
@@ -159,7 +158,6 @@
   z-index: 1002;
 }
 
-/* Chat Panel Styles */
 .chatPanel {
   width: 330px;
   height: 350px;
@@ -189,7 +187,6 @@
   border: 0.5px solid rgba(212, 235, 255, 0.3);
 }
 
-/* Geo and File buttons - dark gradient */
 .actionButton:nth-child(1),
 .actionButton:nth-child(2) {
   background: radial-gradient(
@@ -199,7 +196,6 @@
   );
 }
 
-/* Chat button - light gradient */
 .actionButton:nth-child(3) {
   background: linear-gradient(180deg, #fff 0%, #c8c8c8 100%);
 }
@@ -213,13 +209,11 @@
   height: 24px;
 }
 
-/* Dark buttons (geo, file) should have white icons */
 .actionButton:nth-child(1) img,
 .actionButton:nth-child(2) img {
   filter: brightness(0) invert(1);
 }
 
-/* Light button (chat) should have dark icons */
 .actionButton:nth-child(3) img {
   filter: none;
 }
@@ -395,7 +389,6 @@
   display: none !important;
 }
 
-/* Tasks Modal Styles */
 .modalOverlay {
   position: fixed;
   top: 0;

@@ -28,25 +28,20 @@ export default function SceneControlTransition() {
 
   const handleEffectSelect = (effectId) => {
     setSelectedEffect(effectId);
-    // Сохраняем выбранный effect в стор
     setEffectInStore(effectId);
-    // Показываем уведомление
     const effect = Object.values(VIDEO_EFFECTS).find((e) => e.id === effectId);
     toast.success(`${effect?.name || "Effect"} selected successfully!`);
   };
 
-  // Синхронизируем локальный стейт со store при монтировании
   useEffect(() => {
     if (effectFromStore) {
       setSelectedEffect(effectFromStore);
     } else {
-      // Если ничего не выбрано, выбираем "No Effect" по умолчанию
       setSelectedEffect(VIDEO_EFFECTS.NONE.id);
       setEffectInStore(VIDEO_EFFECTS.NONE.id);
     }
   }, [effectFromStore, setEffectInStore]);
 
-  // Создаем превью для всех эффектов
   useEffect(() => {
     Object.values(VIDEO_EFFECTS).forEach((effect) => {
       const canvas = previewCanvasRefs.current[effect.id];
@@ -72,7 +67,6 @@ export default function SceneControlTransition() {
         </div>
         <div className="stripe2"></div>
         <div className={styles.content}>
-          {/* Превью выбранного эффекта */}
           <div
             style={{
               width: "240px",

@@ -6,11 +6,9 @@ export default function ActCard({ act }) {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    // Open stream viewing page with act ID
     navigate(`/stream/${act.id}`, { state: { act } });
   };
 
-  // If this is a mock card, show original data
   if (act.isMock) {
     return (
       <div className={styles.actCard} onClick={handleCardClick}>
@@ -59,7 +57,6 @@ export default function ActCard({ act }) {
     );
   }
 
-  // For new acts, show real data
   let imageUrl = act.imageUrl;
   if (!imageUrl && act.previewFileName) {
     imageUrl = `/uploads/${act.previewFileName}`;
