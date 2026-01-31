@@ -1,4 +1,3 @@
-// Типы данных для Act согласно Prisma схеме
 export const ActType = {
   SINGLE: "SINGLE",
   MULTI: "MULTI",
@@ -27,6 +26,8 @@ export const createActRequest = (data) => ({
   format: data.format,
   heroMethods: data.heroMethods,
   navigatorMethods: data.navigatorMethods,
+  spotAgentMethods: data.spotAgentMethods || null,
+  spotAgentCount: data.spotAgentCount || 0,
   biddingTime: data.biddingTime,
   photo: data.photo || null,
 });
@@ -52,6 +53,17 @@ export const validateActData = (data) => {
 
   if (!Object.values(SelectionMethods).includes(data.navigatorMethods)) {
     errors.push("Invalid navigator selection method");
+  }
+
+  if (
+    data.spotAgentMethods &&
+    !Object.values(SelectionMethods).includes(data.spotAgentMethods)
+  ) {
+    errors.push("Invalid spot agent selection method");
+  }
+
+  if (data.spotAgentCount < 0) {
+    errors.push("Spot agent count cannot be negative");
   }
 
   if (!data.biddingTime) {

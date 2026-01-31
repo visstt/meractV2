@@ -11,6 +11,7 @@ import RequireAuth from "../../features/Auth/RequireAuth";
 import ForgotPassword from "../../features/Auth/forgotPassword/ForgotPassword";
 import SignUp from "../../features/Auth/registration/SignUp";
 import AchievementsPage from "../../pages/achievements/AchievementsPage";
+import ActDetailPage from "../../pages/actDetail/ActDetailPage";
 import ActsPage from "../../pages/acts/ActsPage";
 import CreateAct from "../../pages/createAct/CreateAct";
 import GuildDetailPage from "../../pages/guilds/GuildDetailPage";
@@ -60,6 +61,14 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <ActsPage />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/acts/:id",
+    element: (
+      <RequireAuth>
+        <ActDetailPage />
       </RequireAuth>
     ),
   },

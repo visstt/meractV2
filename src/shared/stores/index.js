@@ -1,6 +1,7 @@
 // Export store for direct use outside React components
 export { useAuthStore } from "./authStore";
 export { useSequelStore } from "./sequelStore";
+export { useSpotAgentStore } from "./spotAgentStore";
 
 // Utilities for working with localStorage directly (if needed)
 export const authStorageUtils = {

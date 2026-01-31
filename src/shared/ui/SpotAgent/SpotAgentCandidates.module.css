@@ -1,0 +1,217 @@
+.container {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h3 {
+  color: #fff;
+  font-size: 20px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.progress {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: 600;
+}
+
+.infoBox {
+  background: rgba(99, 102, 241, 0.15);
+  border-left: 3px solid #6366f1;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.infoBox p {
+  color: #c7d2fe;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.applyButton {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.applyButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.applyButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.appliedBadge {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.candidatesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.candidateCard {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+}
+
+.candidateCard:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.candidateInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.username {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.appliedAt {
+  color: #8b8b8b;
+  font-size: 12px;
+}
+
+.votingSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voteCount {
+  color: #8b8b8b;
+  font-size: 14px;
+}
+
+.voteButton {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid #6366f1;
+  border-radius: 6px;
+  color: #6366f1;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.voteButton:hover:not(:disabled) {
+  background: #6366f1;
+  color: #fff;
+}
+
+.voteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.votedBadge {
+  background: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.assignSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskInput {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.taskInput::placeholder {
+  color: #8b8b8b;
+}
+
+.assignButton {
+  padding: 8px 16px;
+  background: #22c55e;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-end;
+}
+
+.assignButton:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.assignButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empty {
+  color: #8b8b8b;
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+.empty {
+  color: #8b8b8b;
+  text-align: center;
+  padding: 24px;
+  font-size: 14px;
+}

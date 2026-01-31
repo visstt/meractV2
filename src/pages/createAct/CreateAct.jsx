@@ -36,6 +36,10 @@ export default function CreateAct() {
   const [navigatorMethod, setNavigatorMethod] = useState(
     SelectionMethods.VOTING,
   );
+  const [spotAgentMethod, setSpotAgentMethod] = useState(
+    SelectionMethods.VOTING,
+  );
+  const [spotAgentCount, setSpotAgentCount] = useState(0);
   const [biddingTime, setBiddingTime] = useState(5);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -313,6 +317,8 @@ export default function CreateAct() {
       settingsType,
       heroMethod,
       navigatorMethod,
+      spotAgentMethod,
+      spotAgentCount,
       biddingTime,
       imagePreview,
       timestamp: Date.now(),
@@ -339,6 +345,10 @@ export default function CreateAct() {
           setNavigatorMethod(
             formState.navigatorMethod || SelectionMethods.VOTING,
           );
+          setSpotAgentMethod(
+            formState.spotAgentMethod || SelectionMethods.VOTING,
+          );
+          setSpotAgentCount(formState.spotAgentCount || 0);
           setBiddingTime(formState.biddingTime || 5);
           setImagePreview(formState.imagePreview || null);
 
@@ -463,6 +473,8 @@ export default function CreateAct() {
       format: formatType,
       heroMethods: heroMethod,
       navigatorMethods: navigatorMethod,
+      spotAgentMethods: spotAgentCount > 0 ? spotAgentMethod : null,
+      spotAgentCount: spotAgentCount,
       biddingTime: new Date(Date.now() + biddingTime * 60 * 1000).toISOString(),
       photo: selectedFile,
       musicIds: selectedMusicIds.length > 0 ? selectedMusicIds : [],
@@ -498,6 +510,10 @@ export default function CreateAct() {
     if (result) {
       console.log("Act created successfully:", result);
       console.log("result.actId:", result.actId);
+      console.log("Spot agent data sent:", {
+        spotAgentCount: actData.spotAgentCount,
+        spotAgentMethods: actData.spotAgentMethods,
+      });
 
       localStorage.removeItem("createActFormState");
 
@@ -879,6 +895,100 @@ export default function CreateAct() {
             </div>
           </div>
         </div>
+        <div className={styles.block}>
+          <div className={styles.fileColumn}>
+            <p>Spot Agent Count</p>
+            <div className={styles.row}>
+              <svg
+                width="7"
+                height="13"
+                viewBox="0 0 7 13"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  cursor: spotAgentCount <= 0 ? "not-allowed" : "pointer",
+                  opacity: spotAgentCount <= 0 ? 0.5 : 1,
+                }}
+                onClick={() =>
+                  spotAgentCount > 0 && setSpotAgentCount(spotAgentCount - 1)
+                }
+              >
+                <path
+                  d="M6.73232 0.282864C6.90372 0.464036 7 0.709725 7 0.965903C7 1.22208 6.90372 1.46777 6.73232 1.64894L2.2068 6.43119L6.73232 11.2134C6.89886 11.3956 6.99101 11.6397 6.98893 11.893C6.98684 12.1463 6.89069 12.3886 6.72118 12.5677C6.55168 12.7469 6.32237 12.8485 6.08266 12.8507C5.84295 12.8529 5.612 12.7555 5.43958 12.5795L0.267679 7.11423C0.0962845 6.93305 2.50216e-07 6.68737 2.40631e-07 6.43119C2.31046e-07 6.17501 0.0962844 5.92932 0.267679 5.74815L5.43958 0.282864C5.61102 0.101746 5.84352 -2.98403e-07 6.08595 -3.10783e-07C6.32837 -3.23163e-07 6.56087 0.101746 6.73232 0.282864Z"
+                  fill={spotAgentCount <= 0 ? "#999" : "white"}
+                />
+              </svg>
+              <span style={{ minWidth: "30px", textAlign: "center" }}>
+                {spotAgentCount}
+              </span>
+              <svg
+                width="7"
+                height="13"
+                viewBox="0 0 7 13"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  cursor: spotAgentCount >= 10 ? "not-allowed" : "pointer",
+                  opacity: spotAgentCount >= 10 ? 0.5 : 1,
+                }}
+                onClick={() =>
+                  spotAgentCount < 10 && setSpotAgentCount(spotAgentCount + 1)
+                }
+              >
+                <path
+                  d="M0.26768 12.5687C0.0962849 12.3875 4.84082e-07 12.1418 4.86697e-07 11.8857C4.89312e-07 11.6295 0.0962849 11.3838 0.26768 11.2026L4.7932 6.42037L0.26768 1.63813C0.101143 1.45592 0.00899136 1.21188 0.0110747 0.958567C0.0131575 0.705255 0.109308 0.462943 0.278817 0.283818C0.448325 0.104693 0.677631 0.00308982 0.917343 0.00088874C1.15706 -0.00131234 1.388 0.0960664 1.56042 0.272051L6.73232 5.73734C6.90372 5.91851 7 6.1642 7 6.42037C7 6.67655 6.90372 6.92224 6.73232 7.10341L1.56042 12.5687C1.38898 12.7498 1.15648 12.8516 0.914052 12.8516C0.671627 12.8516 0.439126 12.7498 0.26768 12.5687Z"
+                  fill={spotAgentCount >= 10 ? "#999" : "white"}
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {spotAgentCount > 0 && (
+          <div className={styles.block}>
+            <div className={styles.fileColumn}>
+              <p>Spot Agent Selection Methods</p>
+              <div className={styles.btnRow}>
+                <button
+                  type="button"
+                  className={
+                    spotAgentMethod === SelectionMethods.VOTING
+                      ? `${styles.selectBtn} ${styles.selectBtnActive}`
+                      : styles.selectBtn
+                  }
+                  onClick={() => setSpotAgentMethod(SelectionMethods.VOTING)}
+                >
+                  <img src="/icons/voting.svg" alt="voting" />
+                  Voting
+                </button>
+                <button
+                  type="button"
+                  className={
+                    spotAgentMethod === SelectionMethods.BIDDING
+                      ? `${styles.selectBtn} ${styles.selectBtnActive}`
+                      : styles.selectBtn
+                  }
+                  style={{ paddingBottom: "7px" }}
+                  onClick={() => setSpotAgentMethod(SelectionMethods.BIDDING)}
+                >
+                  <img src="/icons/hummer.svg" alt="voting" />
+                  Bidding
+                </button>
+                <button
+                  type="button"
+                  className={
+                    spotAgentMethod === SelectionMethods.MANUAL
+                      ? `${styles.selectBtn} ${styles.selectBtnActive}`
+                      : styles.selectBtn
+                  }
+                  onClick={() => setSpotAgentMethod(SelectionMethods.MANUAL)}
+                >
+                  <img src="/icons/manual.svg" alt="voting" />
+                  Manual
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className={styles.block}>
           <p>Bidding Time</p>
           <div className={styles.row}>

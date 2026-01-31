@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaMap, FaMusic } from "react-icons/fa";
+import { FaMap, FaMusic, FaUsers } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { MdCameraswitch, MdChecklistRtl } from "react-icons/md";
 import {
@@ -17,6 +17,7 @@ import {
 import { toast } from "react-toastify";
 
 import api from "../../../shared/api/api";
+import { useSpotAgent } from "../../../shared/hooks/useSpotAgent";
 import { useAuthStore } from "../../../shared/stores/authStore";
 import { VideoEffectsProcessor } from "../../../shared/utils/videoEffects";
 import useChat from "../../acts/hooks/useChat";
@@ -86,6 +87,23 @@ const StreamHost = ({
   // Music controls state
   const [showMusicControls, setShowMusicControls] = useState(false);
   const [musicVolume, setMusicVolume] = useState(50);
+
+  // Spot Agent state
+  const [isSpotAgentModalOpen, setIsSpotAgentModalOpen] = useState(false);
+  const [taskInputs, setTaskInputs] = useState({});
+  const [showTaskInputForCandidate, setShowTaskInputForCandidate] = useState({});
+
+  // Spot Agent hook
+  const {
+    candidates,
+    assignedAgents,
+    loading: spotAgentLoading,
+    error: spotAgentError,
+    fetchCandidates,
+    fetchAssigned,
+    assign,
+    remove,
+  } = useSpotAgent(actId);
 
   // Chat state
   const [chatMessage, setChatMessage] = useState("");
@@ -302,6 +320,14 @@ const StreamHost = ({
       }
     };
   }, [actId, channelName, userId]);
+
+  // Fetch spot agent data when actData is loaded
+  useEffect(() => {
+    if (actData?.spotAgentCount > 0) {
+      fetchCandidates();
+      fetchAssigned();
+    }
+  }, [actData?.spotAgentCount, fetchCandidates, fetchAssigned]);
 
   useEffect(() => {
     if (!actData) return;
@@ -925,6 +951,33 @@ const StreamHost = ({
     }
   };
 
+  // Spot Agent handlers
+  const handleAssignSpotAgent = async (candidate) => {
+    if (showTaskInputForCandidate[candidate.id]) {
+      // User clicked "Confirm" - proceed with assignment
+      try {
+        await assign(candidate.userId, taskInputs[candidate.id] || "");
+        setShowTaskInputForCandidate({ ...showTaskInputForCandidate, [candidate.id]: false });
+        setTaskInputs({ ...taskInputs, [candidate.id]: "" });
+        toast.success(`${candidate.user?.login || "User"} назначен как Spot Agent`);
+      } catch (err) {
+        toast.error(err.message || "Не удалось назначить Spot Agent");
+      }
+    } else {
+      // Show task input
+      setShowTaskInputForCandidate({ ...showTaskInputForCandidate, [candidate.id]: true });
+    }
+  };
+
+  const handleRemoveSpotAgent = async (spotAgentId) => {
+    try {
+      await remove(spotAgentId);
+      toast.success("Spot Agent удален");
+    } catch (err) {
+      toast.error(err.message || "Не удалось удалить Spot Agent");
+    }
+  };
+
   // Load tasks when modal opens
   useEffect(() => {
     if (isTasksModalOpen) {
@@ -1127,6 +1180,15 @@ const StreamHost = ({
                 title="Music Controls"
               >
                 <FaMusic size={18} /> Music
+              </button>
+            )}
+            {actData?.spotAgentCount > 0 && (
+              <button
+                className={`${styles.button} ${styles.spotAgentButton}`}
+                onClick={() => setIsSpotAgentModalOpen(true)}
+                title="Manage Spot Agents"
+              >
+                <FaUsers size={18} /> Spot Agents ({assignedAgents.length}/{actData.spotAgentCount})
               </button>
             )}
           </div>
@@ -1421,6 +1483,142 @@ const StreamHost = ({
                   />
                   <span className={styles.volumeValue}>{musicVolume}%</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spot Agent Management Modal */}
+      {isSpotAgentModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsSpotAgentModalOpen(false)}
+        >
+          <div
+            className={styles.spotAgentModalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2>Управление Spot Agents</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setIsSpotAgentModalOpen(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.spotAgentModalBody}>
+              {/* Progress indicator */}
+              <div className={styles.spotAgentProgress}>
+                <span className={styles.progressLabel}>Назначено:</span>
+                <div className={styles.progressBar}>
+                  <div 
+                    className={styles.progressFill}
+                    style={{ width: `${(assignedAgents.length / actData?.spotAgentCount) * 100}%` }}
+                  />
+                </div>
+                <span className={styles.progressCount}>
+                  {assignedAgents.length}/{actData?.spotAgentCount}
+                </span>
+              </div>
+
+              {spotAgentError && (
+                <div className={styles.spotAgentError}>{spotAgentError}</div>
+              )}
+
+              {/* Assigned Agents Section */}
+              {assignedAgents.length > 0 && (
+                <div className={styles.assignedSection}>
+                  <h3>✅ Назначенные Spot Agents</h3>
+                  <div className={styles.agentsList}>
+                    {assignedAgents.map((agent) => (
+                      <div key={agent.id} className={styles.assignedAgentCard}>
+                        <div className={styles.agentInfo}>
+                          <span className={styles.agentName}>
+                            {agent.user?.login || "Unknown"}
+                          </span>
+                          <span className={styles.agentStatus}>
+                            {agent.status}
+                          </span>
+                        </div>
+                        {agent.task && (
+                          <div className={styles.agentTask}>
+                            <span className={styles.taskLabel}>Задание:</span>
+                            <span>{agent.task}</span>
+                          </div>
+                        )}
+                        <button
+                          className={styles.removeAgentButton}
+                          onClick={() => handleRemoveSpotAgent(agent.id)}
+                          disabled={spotAgentLoading}
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Candidates Section */}
+              <div className={styles.candidatesSection}>
+                <h3>🙋 Кандидаты ({candidates.length})</h3>
+                {candidates.length === 0 ? (
+                  <div className={styles.noCandidates}>
+                    Пока нет кандидатов. Зрители могут подать заявку на участие.
+                  </div>
+                ) : (
+                  <div className={styles.candidatesList}>
+                    {[...candidates]
+                      .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
+                      .map((candidate) => (
+                        <div key={candidate.id} className={styles.candidateCard}>
+                          <div className={styles.candidateInfo}>
+                            <span className={styles.candidateName}>
+                              {candidate.user?.login || "Unknown"}
+                            </span>
+                            {actData?.spotAgentMethods === "VOTING" && (
+                              <span className={styles.voteCount}>
+                                {candidate.voteCount || 0} голосов
+                              </span>
+                            )}
+                          </div>
+                          <span className={styles.appliedAt}>
+                            Заявка: {new Date(candidate.appliedAt).toLocaleString()}
+                          </span>
+                          
+                          {assignedAgents.length < actData?.spotAgentCount && (
+                            <div className={styles.assignSection}>
+                              {showTaskInputForCandidate[candidate.id] && (
+                                <input
+                                  type="text"
+                                  placeholder="Задание (опционально)"
+                                  value={taskInputs[candidate.id] || ""}
+                                  onChange={(e) =>
+                                    setTaskInputs({
+                                      ...taskInputs,
+                                      [candidate.id]: e.target.value,
+                                    })
+                                  }
+                                  className={styles.taskInput}
+                                />
+                              )}
+                              <button
+                                className={styles.assignButton}
+                                onClick={() => handleAssignSpotAgent(candidate)}
+                                disabled={spotAgentLoading}
+                              >
+                                {showTaskInputForCandidate[candidate.id] ? "Подтвердить" : "Назначить"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

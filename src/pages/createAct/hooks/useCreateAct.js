@@ -131,6 +131,25 @@ export function useCreateAct() {
       formData.append("heroMethods", actData.heroMethods);
       formData.append("navigatorMethods", actData.navigatorMethods);
       formData.append("biddingTime", actData.biddingTime);
+
+      if (actData.spotAgentMethods) {
+        formData.append("spotAgentMethods", actData.spotAgentMethods);
+        console.log(
+          "Adding spotAgentMethods to FormData:",
+          actData.spotAgentMethods,
+        );
+      }
+      if (
+        actData.spotAgentCount !== null &&
+        actData.spotAgentCount !== undefined
+      ) {
+        formData.append("spotAgentCount", actData.spotAgentCount.toString());
+        console.log(
+          "Adding spotAgentCount to FormData:",
+          actData.spotAgentCount,
+        );
+      }
+
       if (userId) {
         formData.append("userId", userId.toString());
       }
@@ -218,6 +237,8 @@ export function useCreateAct() {
         format: actData.format,
         heroMethods: actData.heroMethods,
         navigatorMethods: actData.navigatorMethods,
+        spotAgentMethods: actData.spotAgentMethods,
+        spotAgentCount: actData.spotAgentCount,
         biddingTime: actData.biddingTime,
         userId: userId,
         hasPhoto: !!actData.photo,
@@ -227,11 +248,23 @@ export function useCreateAct() {
         musicIds: actData.musicIds,
       });
 
+      console.log("=== SENDING TO SERVER ===");
+      console.log("API URL:", `${api.defaults.baseURL}/act/create-act`);
+      console.log(
+        "FormData size:",
+        Array.from(formData.entries()).length,
+        "fields",
+      );
+
       const response = await api.post("/act/create-act", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+
+      console.log("=== SERVER RESPONSE ===");
+      console.log("Status:", response.status);
+      console.log("Response data:", response.data);
 
       setSuccess(true);
       setLoading(false);

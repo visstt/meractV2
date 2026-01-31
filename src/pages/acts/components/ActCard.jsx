@@ -5,6 +5,8 @@ import styles from "./ActCard.module.css";
 export default function ActCard({ act }) {
   const navigate = useNavigate();
 
+  console.log("ActCard received act:", act);
+
   const handleCardClick = () => {
     navigate(`/stream/${act.id}`, { state: { act } });
   };
@@ -77,8 +79,11 @@ export default function ActCard({ act }) {
       <h3>{act.description}</h3>
       <p>
         Type: {act.type} | Format: {act.format}
-        Hero Selection: {act.heroMethods} | Navigator Selection:{" "}
-        {act.navigatorMethods}
+        {act.spotAgentCount > 0 && ` | Spot Agents: ${act.spotAgentCount}`}
+      </p>
+      <p>
+        Hero: {act.heroMethods} | Navigator: {act.navigatorMethods}
+        {act.spotAgentMethods && ` | Spot Agent: ${act.spotAgentMethods}`}
       </p>
 
       <div className={styles.stripe}></div>
