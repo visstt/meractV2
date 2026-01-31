@@ -128,31 +128,32 @@ export default function StreamPage() {
       </div>
 
       {/* Floating Spot Agent Button for Viewers */}
-      {!isInitiator && spotAgentCount > 0 && assignedAgents.length < spotAgentCount && (
-        <div className={styles.floatingSpotAgentContainer}>
-          {hasApplied ? (
-            <div className={styles.appliedBadgeFloating}>
-              ✓ Вы подали заявку на Spot Agent
+      {!isInitiator &&
+        spotAgentCount > 0 &&
+        assignedAgents.length < spotAgentCount && (
+          <div className={styles.floatingSpotAgentContainer}>
+            {hasApplied ? (
+              <div className={styles.appliedBadgeFloating}>
+                ✓ Вы подали заявку на Spot Agent
+              </div>
+            ) : (
+              <button
+                className={styles.floatingSpotAgentButton}
+                onClick={handleApplyAsSpotAgent}
+                disabled={spotAgentLoading}
+              >
+                🙋 Стать Spot Agent
+              </button>
+            )}
+            <div className={styles.spotAgentProgress}>
+              Нужно: {spotAgentCount - assignedAgents.length} Spot Agent
+              {spotAgentCount - assignedAgents.length > 1 ? "s" : ""}
             </div>
-          ) : (
-            <button
-              className={styles.floatingSpotAgentButton}
-              onClick={handleApplyAsSpotAgent}
-              disabled={spotAgentLoading}
-            >
-              🙋 Стать Spot Agent
-            </button>
-          )}
-          <div className={styles.spotAgentProgress}>
-            Нужно: {spotAgentCount - assignedAgents.length} Spot Agent{spotAgentCount - assignedAgents.length > 1 ? "s" : ""}
           </div>
-        </div>
-      )}
+        )}
 
       {spotAgentError && (
-        <div className={styles.spotAgentError}>
-          {spotAgentError}
-        </div>
+        <div className={styles.spotAgentError}>{spotAgentError}</div>
       )}
     </div>
   );

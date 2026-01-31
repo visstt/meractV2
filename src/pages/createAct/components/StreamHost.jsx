@@ -10,8 +10,8 @@ import {
   Circle,
   MapContainer,
   Marker,
-  Popup,
   Polyline,
+  Popup,
   TileLayer,
 } from "react-leaflet";
 import { toast } from "react-toastify";
@@ -67,7 +67,7 @@ const StreamHost = ({
   const [showIntro, setShowIntro] = useState(false);
   const [showOutro, setShowOutro] = useState(false);
   const [currentMusicIndex, setCurrentMusicIndex] = useState(0);
-  const [facingMode, setFacingMode] = useState("user"); 
+  const [facingMode, setFacingMode] = useState("user");
 
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
 
@@ -91,7 +91,9 @@ const StreamHost = ({
   // Spot Agent state
   const [isSpotAgentModalOpen, setIsSpotAgentModalOpen] = useState(false);
   const [taskInputs, setTaskInputs] = useState({});
-  const [showTaskInputForCandidate, setShowTaskInputForCandidate] = useState({});
+  const [showTaskInputForCandidate, setShowTaskInputForCandidate] = useState(
+    {},
+  );
 
   // Spot Agent hook
   const {
@@ -131,9 +133,9 @@ const StreamHost = ({
   const musicAudioRef = useRef(null);
   const clientRef = useRef(null);
   const localTracksRef = useRef({});
-  const effectsProcessorRef = useRef(null); 
-  const isInitializingRef = useRef(false); 
-  const isStreamingStartedRef = useRef(false); 
+  const effectsProcessorRef = useRef(null);
+  const isInitializingRef = useRef(false);
+  const isStreamingStartedRef = useRef(false);
 
   const { user } = useAuthStore();
 
@@ -145,11 +147,11 @@ const StreamHost = ({
       const tokenData = parseJWT(user.token);
       return tokenData?.sub || tokenData?.id || 999999;
     }
-    return 999999; 
+    return 999999;
   }, [user]);
 
   const userId = useMemo(() => {
-    const randomComponent = Math.floor(Math.random() * 100); 
+    const randomComponent = Math.floor(Math.random() * 100);
     const uid = actId
       ? parseInt(actId) * 1000000 + baseUserId * 100 + randomComponent
       : Math.floor(Date.now() / 1000) * 1000000 +
@@ -343,8 +345,14 @@ const StreamHost = ({
     }
 
     // Destination is the LAST point from routePoints array
-    if (actData.routePoints && Array.isArray(actData.routePoints) && actData.routePoints.length > 0) {
-      const sorted = [...actData.routePoints].sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (
+      actData.routePoints &&
+      Array.isArray(actData.routePoints) &&
+      actData.routePoints.length > 0
+    ) {
+      const sorted = [...actData.routePoints].sort(
+        (a, b) => (a.order || 0) - (b.order || 0),
+      );
       const lastPoint = sorted[sorted.length - 1];
       setLocalDestinationLocation({
         latitude: lastPoint.latitude,
@@ -356,20 +364,25 @@ const StreamHost = ({
         (async () => {
           try {
             const waypoints = [];
-            waypoints.push(`${actData.startLongitude},${actData.startLatitude}`);
-            
+            waypoints.push(
+              `${actData.startLongitude},${actData.startLatitude}`,
+            );
+
             sorted.forEach((p) => {
               waypoints.push(`${p.longitude},${p.latitude}`);
             });
 
-            const waypointsString = waypoints.join(';');
-            
+            const waypointsString = waypoints.join(";");
+
             const response = await fetch(
               `https://router.project-osrm.org/route/v1/foot/${waypointsString}?overview=full&geometries=geojson`,
             );
             const data = await response.json();
             if (data.routes && data.routes[0]) {
-              const coords = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+              const coords = data.routes[0].geometry.coordinates.map((c) => [
+                c[1],
+                c[0],
+              ]);
               setLocalRouteCoordinates(coords);
             }
           } catch (err) {
@@ -391,9 +404,15 @@ const StreamHost = ({
     }
 
     if (
-      !(actData.routePoints && Array.isArray(actData.routePoints) && actData.routePoints.length > 0) &&
-      (actData.startLatitude && actData.startLongitude) &&
-      (actData.destinationLatitude && actData.destinationLongitude)
+      !(
+        actData.routePoints &&
+        Array.isArray(actData.routePoints) &&
+        actData.routePoints.length > 0
+      ) &&
+      actData.startLatitude &&
+      actData.startLongitude &&
+      actData.destinationLatitude &&
+      actData.destinationLongitude
     ) {
       (async () => {
         try {
@@ -402,7 +421,10 @@ const StreamHost = ({
           );
           const data = await response.json();
           if (data.routes && data.routes[0]) {
-            const coords = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+            const coords = data.routes[0].geometry.coordinates.map((c) => [
+              c[1],
+              c[0],
+            ]);
             setLocalRouteCoordinates(coords);
           }
         } catch (err) {
@@ -481,8 +503,8 @@ const StreamHost = ({
     console.log("Starting background music:", musicUrl);
 
     musicAudio.src = musicUrl;
-    musicAudio.volume = 0.25; 
-    musicAudio.loop = false; 
+    musicAudio.volume = 0.25;
+    musicAudio.loop = false;
 
     musicAudio.onended = () => {
       const nextIndex = (currentMusicIndex + 1) % sortedMusic.length;
@@ -749,7 +771,7 @@ const StreamHost = ({
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facingMode },
-        audio: false, 
+        audio: false,
       });
 
       const videoTrackNative = mediaStream.getVideoTracks()[0];
@@ -771,7 +793,7 @@ const StreamHost = ({
         sourceVideoRef.current,
         {
           vignette: true,
-          colorFilter: "warm", 
+          colorFilter: "warm",
           vignetteIntensity: 0.6,
           colorIntensity: 0.3,
         },
@@ -787,7 +809,7 @@ const StreamHost = ({
       });
 
       localTracksRef.current.videoTrack = videoTrack;
-      localTracksRef.current.nativeVideoTrack = videoTrackNative; 
+      localTracksRef.current.nativeVideoTrack = videoTrackNative;
 
       if (localVideoRef.current) {
         console.log("Playing local video with effects...");
@@ -957,15 +979,23 @@ const StreamHost = ({
       // User clicked "Confirm" - proceed with assignment
       try {
         await assign(candidate.userId, taskInputs[candidate.id] || "");
-        setShowTaskInputForCandidate({ ...showTaskInputForCandidate, [candidate.id]: false });
+        setShowTaskInputForCandidate({
+          ...showTaskInputForCandidate,
+          [candidate.id]: false,
+        });
         setTaskInputs({ ...taskInputs, [candidate.id]: "" });
-        toast.success(`${candidate.user?.login || "User"} назначен как Spot Agent`);
+        toast.success(
+          `${candidate.user?.login || "User"} назначен как Spot Agent`,
+        );
       } catch (err) {
         toast.error(err.message || "Не удалось назначить Spot Agent");
       }
     } else {
       // Show task input
-      setShowTaskInputForCandidate({ ...showTaskInputForCandidate, [candidate.id]: true });
+      setShowTaskInputForCandidate({
+        ...showTaskInputForCandidate,
+        [candidate.id]: true,
+      });
     }
   };
 
@@ -1030,9 +1060,7 @@ const StreamHost = ({
       const uidKey = `${userId}_host`;
       if (window.__STREAM_UIDS__ && window.__STREAM_UIDS__[uidKey]) {
         delete window.__STREAM_UIDS__[uidKey];
-        console.log(
-          "UID cleared from conflict detection: " + userId,
-        );
+        console.log("UID cleared from conflict detection: " + userId);
       }
 
       localTracksRef.current = {};
@@ -1060,7 +1088,6 @@ const StreamHost = ({
       }
 
       console.log("Stream stopped successfully");
-
     } catch (err) {
       console.error("Error stopping stream:", err);
       setError("Failed to stop stream: " + err.message);
@@ -1188,7 +1215,8 @@ const StreamHost = ({
                 onClick={() => setIsSpotAgentModalOpen(true)}
                 title="Manage Spot Agents"
               >
-                <FaUsers size={18} /> Spot Agents ({assignedAgents.length}/{actData.spotAgentCount})
+                <FaUsers size={18} /> Spot Agents ({assignedAgents.length}/
+                {actData.spotAgentCount})
               </button>
             )}
           </div>
@@ -1345,7 +1373,10 @@ const StreamHost = ({
               <MapContainer
                 center={
                   localStartLocation
-                    ? [localStartLocation.latitude, localStartLocation.longitude]
+                    ? [
+                        localStartLocation.latitude,
+                        localStartLocation.longitude,
+                      ]
                     : [55.751244, 37.618423]
                 }
                 zoom={13}
@@ -1361,7 +1392,10 @@ const StreamHost = ({
                 />
                 {localStartLocation && (
                   <Circle
-                    center={[localStartLocation.latitude, localStartLocation.longitude]}
+                    center={[
+                      localStartLocation.latitude,
+                      localStartLocation.longitude,
+                    ]}
                     radius={50}
                     pathOptions={{
                       color: "black",
@@ -1381,15 +1415,18 @@ const StreamHost = ({
                     }}
                   />
                 )}
-                {actData?.routePoints && actData.routePoints.length > 0 &&
+                {actData?.routePoints &&
+                  actData.routePoints.length > 0 &&
                   actData.routePoints
                     .slice()
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
                     .map((pt) => {
                       const isStartPoint =
                         localStartLocation &&
-                        Math.abs(pt.latitude - localStartLocation.latitude) < 0.0001 &&
-                        Math.abs(pt.longitude - localStartLocation.longitude) < 0.0001;
+                        Math.abs(pt.latitude - localStartLocation.latitude) <
+                          0.0001 &&
+                        Math.abs(pt.longitude - localStartLocation.longitude) <
+                          0.0001;
 
                       if (isStartPoint) return null;
 
@@ -1515,9 +1552,11 @@ const StreamHost = ({
               <div className={styles.spotAgentProgress}>
                 <span className={styles.progressLabel}>Назначено:</span>
                 <div className={styles.progressBar}>
-                  <div 
+                  <div
                     className={styles.progressFill}
-                    style={{ width: `${(assignedAgents.length / actData?.spotAgentCount) * 100}%` }}
+                    style={{
+                      width: `${(assignedAgents.length / actData?.spotAgentCount) * 100}%`,
+                    }}
                   />
                 </div>
                 <span className={styles.progressCount}>
@@ -1575,7 +1614,10 @@ const StreamHost = ({
                     {[...candidates]
                       .sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0))
                       .map((candidate) => (
-                        <div key={candidate.id} className={styles.candidateCard}>
+                        <div
+                          key={candidate.id}
+                          className={styles.candidateCard}
+                        >
                           <div className={styles.candidateInfo}>
                             <span className={styles.candidateName}>
                               {candidate.user?.login || "Unknown"}
@@ -1587,9 +1629,10 @@ const StreamHost = ({
                             )}
                           </div>
                           <span className={styles.appliedAt}>
-                            Заявка: {new Date(candidate.appliedAt).toLocaleString()}
+                            Заявка:{" "}
+                            {new Date(candidate.appliedAt).toLocaleString()}
                           </span>
-                          
+
                           {assignedAgents.length < actData?.spotAgentCount && (
                             <div className={styles.assignSection}>
                               {showTaskInputForCandidate[candidate.id] && (
@@ -1611,7 +1654,9 @@ const StreamHost = ({
                                 onClick={() => handleAssignSpotAgent(candidate)}
                                 disabled={spotAgentLoading}
                               >
-                                {showTaskInputForCandidate[candidate.id] ? "Подтвердить" : "Назначить"}
+                                {showTaskInputForCandidate[candidate.id]
+                                  ? "Подтвердить"
+                                  : "Назначить"}
                               </button>
                             </div>
                           )}
