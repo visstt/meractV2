@@ -171,7 +171,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
     return channelName?.replace("act_", "") || streamData?.id || "default";
   }, [channelName, streamData]);
 
-  // Create UNIQUE UID for viewer 
+  // Create UNIQUE UID for viewer
   // (streamId * 1000000) + (baseUserId * 100) + randomComponent
   const userId = useMemo(() => {
     const randomComponent = Math.floor(Math.random() * 100); // 0-99
@@ -263,7 +263,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
         disconnectFromStream();
       }
     };
-  }, [streamData?.id, actualChannelName, userId]); 
+  }, [streamData?.id, actualChannelName, userId]);
 
   // Timer for stream duration
   useEffect(() => {
@@ -366,21 +366,29 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           longitude: lastPoint.longitude,
         };
         setDestinationLocation(destination);
-        console.log("StreamViewer - Destination location set (last routePoint):", destination);
+        console.log(
+          "StreamViewer - Destination location set (last routePoint):",
+          destination,
+        );
 
         // Build route through all points: start → routePoints → destination
-        if (actualStreamData?.startLatitude && actualStreamData?.startLongitude) {
+        if (
+          actualStreamData?.startLatitude &&
+          actualStreamData?.startLongitude
+        ) {
           try {
             // Build waypoints string for OSRM: start;point1;point2;...;lastPoint
             const waypoints = [];
-            waypoints.push(`${actualStreamData.startLongitude},${actualStreamData.startLatitude}`);
-            
+            waypoints.push(
+              `${actualStreamData.startLongitude},${actualStreamData.startLatitude}`,
+            );
+
             sorted.forEach((p) => {
               waypoints.push(`${p.longitude},${p.latitude}`);
             });
 
-            const waypointsString = waypoints.join(';');
-            
+            const waypointsString = waypoints.join(";");
+
             const response = await fetch(
               `https://router.project-osrm.org/route/v1/foot/${waypointsString}?overview=full&geometries=geojson`,
             );
@@ -744,20 +752,22 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
             <img src="/icons/chat/chat.png" alt="Chat" />
           </button>
           {/* Spot Agent Button - только если требуются spot agents */}
-          {!isInitiator && spotAgentCount > 0 && assignedAgents.length < spotAgentCount && (
-            <button
-              className={`${styles.actionButton} ${hasApplied ? styles.spotAgentApplied : styles.spotAgentButton}`}
-              onClick={handleApplyAsSpotAgent}
-              disabled={spotAgentLoading || hasApplied}
-              title={hasApplied ? "Заявка подана" : "Стать Spot Agent"}
-            >
-              {hasApplied ? (
-                <span className={styles.spotAgentIcon}>✓</span>
-              ) : (
-                <span className={styles.spotAgentIcon}>🙋</span>
-              )}
-            </button>
-          )}
+          {!isInitiator &&
+            spotAgentCount > 0 &&
+            assignedAgents.length < spotAgentCount && (
+              <button
+                className={`${styles.actionButton} ${hasApplied ? styles.spotAgentApplied : styles.spotAgentButton}`}
+                onClick={handleApplyAsSpotAgent}
+                disabled={spotAgentLoading || hasApplied}
+                title={hasApplied ? "Заявка подана" : "Стать Spot Agent"}
+              >
+                {hasApplied ? (
+                  <span className={styles.spotAgentIcon}>✓</span>
+                ) : (
+                  <span className={styles.spotAgentIcon}>🙋</span>
+                )}
+              </button>
+            )}
         </div>
       </div>
 

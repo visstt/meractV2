@@ -51,7 +51,8 @@ export function useSpotAgent(actId) {
     try {
       console.log("Applying for actId:", actId, "type:", typeof actId);
       // Ensure actId is a number
-      const numericActId = typeof actId === 'string' ? parseInt(actId, 10) : actId;
+      const numericActId =
+        typeof actId === "string" ? parseInt(actId, 10) : actId;
       const data = await spotAgentApi.apply(numericActId);
       console.log("Apply response:", data);
       await fetchCandidates();
