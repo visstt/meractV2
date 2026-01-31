@@ -117,9 +117,9 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const handleApplyAsSpotAgent = async () => {
     try {
       await apply();
-      toast.success("Заявка на Spot Agent подана успешно!");
+      toast.success("Spot Agent application submitted successfully!");
     } catch (err) {
-      toast.error(err.message || "Не удалось подать заявку");
+      toast.error(err.message || "Failed to submit application");
     }
   };
 
@@ -759,7 +759,7 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                 className={`${styles.actionButton} ${hasApplied ? styles.spotAgentApplied : styles.spotAgentButton}`}
                 onClick={handleApplyAsSpotAgent}
                 disabled={spotAgentLoading || hasApplied}
-                title={hasApplied ? "Заявка подана" : "Стать Spot Agent"}
+                title={hasApplied ? "Application submitted" : "Become a Spot Agent"}
               >
                 {hasApplied ? (
                   <span className={styles.spotAgentIcon}>✓</span>

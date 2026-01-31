@@ -49,8 +49,8 @@ export default function StreamPage() {
     return (
       <div className={styles.streamPage}>
         <div className={styles.error}>
-          <h2>Стрим не найден</h2>
-          <p>Не удалось загрузить информацию о стриме</p>
+          <h2>Stream not found</h2>
+          <p>Failed to load stream information</p>
         </div>
       </div>
     );

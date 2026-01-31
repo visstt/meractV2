@@ -997,10 +997,10 @@ const StreamHost = ({
         });
         setTaskInputs({ ...taskInputs, [candidate.id]: "" });
         toast.success(
-          `${candidate.user?.login || "User"} назначен как Spot Agent`,
+          `${candidate.user?.login || "User"} assigned as Spot Agent`,
         );
       } catch (err) {
-        toast.error(err.message || "Не удалось назначить Spot Agent");
+        toast.error(err.message || "Failed to assign Spot Agent");
       }
     } else {
       // Show task input
@@ -1014,9 +1014,9 @@ const StreamHost = ({
   const handleRemoveSpotAgent = async (spotAgentId) => {
     try {
       await remove(spotAgentId);
-      toast.success("Spot Agent удален");
+      toast.success("Spot Agent removed");
     } catch (err) {
-      toast.error(err.message || "Не удалось удалить Spot Agent");
+      toast.error(err.message || "Failed to remove Spot Agent");
     }
   };
 
@@ -1549,7 +1549,7 @@ const StreamHost = ({
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.modalHeader}>
-              <h2>Управление Spot Agents</h2>
+              <h2>Manage Spot Agents</h2>
               <button
                 className={styles.closeButton}
                 onClick={() => setIsSpotAgentModalOpen(false)}
@@ -1562,7 +1562,7 @@ const StreamHost = ({
             <div className={styles.spotAgentModalBody}>
               {/* Progress indicator */}
               <div className={styles.spotAgentProgress}>
-                <span className={styles.progressLabel}>Назначено:</span>
+                <span className={styles.progressLabel}>Assigned:</span>
                 <div className={styles.progressBar}>
                   <div
                     className={styles.progressFill}
@@ -1583,7 +1583,7 @@ const StreamHost = ({
               {/* Assigned Agents Section */}
               {assignedAgents.length > 0 && (
                 <div className={styles.assignedSection}>
-                  <h3>✅ Назначенные Spot Agents</h3>
+                  <h3>✅ Assigned Spot Agents</h3>
                   <div className={styles.agentsList}>
                     {assignedAgents.map((agent) => (
                       <div key={agent.id} className={styles.assignedAgentCard}>
@@ -1597,7 +1597,7 @@ const StreamHost = ({
                         </div>
                         {agent.task && (
                           <div className={styles.agentTask}>
-                            <span className={styles.taskLabel}>Задание:</span>
+                            <span className={styles.taskLabel}>Task:</span>
                             <span>{agent.task}</span>
                           </div>
                         )}
@@ -1606,7 +1606,7 @@ const StreamHost = ({
                           onClick={() => handleRemoveSpotAgent(agent.id)}
                           disabled={spotAgentLoading}
                         >
-                          Удалить
+                          Remove
                         </button>
                       </div>
                     ))}
@@ -1616,10 +1616,10 @@ const StreamHost = ({
 
               {/* Candidates Section */}
               <div className={styles.candidatesSection}>
-                <h3>🙋 Кандидаты ({candidates.length})</h3>
+                <h3>🙋 Candidates ({candidates.length})</h3>
                 {candidates.length === 0 ? (
                   <div className={styles.noCandidates}>
-                    Пока нет кандидатов. Зрители могут подать заявку на участие.
+                    No candidates yet. Viewers can apply to participate.
                   </div>
                 ) : (
                   <div className={styles.candidatesList}>
@@ -1636,12 +1636,12 @@ const StreamHost = ({
                             </span>
                             {actData?.spotAgentMethods === "VOTING" && (
                               <span className={styles.voteCount}>
-                                {candidate.voteCount || 0} голосов
+                                {candidate.voteCount || 0} votes
                               </span>
                             )}
                           </div>
                           <span className={styles.appliedAt}>
-                            Заявка:{" "}
+                            Applied:{" "}
                             {new Date(candidate.appliedAt).toLocaleString()}
                           </span>
 
@@ -1650,7 +1650,7 @@ const StreamHost = ({
                               {showTaskInputForCandidate[candidate.id] && (
                                 <input
                                   type="text"
-                                  placeholder="Задание (опционально)"
+                                  placeholder="Task (optional)"
                                   value={taskInputs[candidate.id] || ""}
                                   onChange={(e) =>
                                     setTaskInputs({
@@ -1667,8 +1667,8 @@ const StreamHost = ({
                                 disabled={spotAgentLoading}
                               >
                                 {showTaskInputForCandidate[candidate.id]
-                                  ? "Подтвердить"
-                                  : "Назначить"}
+                                  ? "Confirm"
+                                  : "Assign"}
                               </button>
                             </div>
                           )}
