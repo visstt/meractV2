@@ -759,7 +759,9 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
                 className={`${styles.actionButton} ${hasApplied ? styles.spotAgentApplied : styles.spotAgentButton}`}
                 onClick={handleApplyAsSpotAgent}
                 disabled={spotAgentLoading || hasApplied}
-                title={hasApplied ? "Application submitted" : "Become a Spot Agent"}
+                title={
+                  hasApplied ? "Application submitted" : "Become a Spot Agent"
+                }
               >
                 {hasApplied ? (
                   <span className={styles.spotAgentIcon}>✓</span>
