@@ -331,6 +331,18 @@ const StreamHost = ({
     }
   }, [actData?.spotAgentCount, fetchCandidates, fetchAssigned]);
 
+  // Poll for new spot agent candidates every 10 seconds
+  useEffect(() => {
+    if (!actData?.spotAgentCount || actData.spotAgentCount <= 0) return;
+
+    const pollInterval = setInterval(() => {
+      fetchCandidates();
+      fetchAssigned();
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [actData?.spotAgentCount, fetchCandidates, fetchAssigned]);
+
   useEffect(() => {
     if (!actData) return;
 

@@ -12,8 +12,10 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import api from "../../../shared/api/api";
+import { useSpotAgent } from "../../../shared/hooks/useSpotAgent";
 import { useAuthStore } from "../../../shared/stores/authStore";
 import useChat from "../hooks/useChat";
 import EmojiPicker from "./EmojiPicker";
@@ -63,7 +65,26 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const actId = streamData?.id || channelName?.replace("act_", "");
   const { messages: chatMessages, sendMessage, sending } = useChat(actId);
 
+  // Spot Agent state
+  const [isSpotAgentModalOpen, setIsSpotAgentModalOpen] = useState(false);
+  const { user } = useAuthStore();
+  const {
+    candidates,
+    assignedAgents,
+    loading: spotAgentLoading,
+    error: spotAgentError,
+    fetchCandidates,
+    fetchAssigned,
+    apply,
+  } = useSpotAgent(actId);
+
   const [actualStreamData, setActualStreamData] = useState(streamData);
+
+  // Spot Agent computed values
+  const currentUserId = user?.id || user?.sub;
+  const isInitiator = currentUserId === actualStreamData?.userId;
+  const spotAgentCount = actualStreamData?.spotAgentCount || 0;
+  const hasApplied = candidates.some((c) => c.userId === currentUserId);
 
   // Load actual stream data from server
   useEffect(() => {
@@ -83,6 +104,24 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
 
     loadStreamData();
   }, [actId, streamData]);
+
+  // Fetch spot agent data when spotAgentCount > 0
+  useEffect(() => {
+    if (spotAgentCount > 0) {
+      fetchCandidates();
+      fetchAssigned();
+    }
+  }, [spotAgentCount, fetchCandidates, fetchAssigned]);
+
+  // Handle apply as spot agent
+  const handleApplyAsSpotAgent = async () => {
+    try {
+      await apply();
+      toast.success("Заявка на Spot Agent подана успешно!");
+    } catch (err) {
+      toast.error(err.message || "Не удалось подать заявку");
+    }
+  };
 
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
@@ -115,9 +154,6 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
   const clientRef = useRef(null);
   const isConnectingRef = useRef(false);
   const streamStartTimeRef = useRef(null);
-
-  // Get user from auth store
-  const { user } = useAuthStore();
 
   // Extract user ID (use user.id first, then from token)
   const baseUserId = useMemo(() => {
@@ -707,6 +743,21 @@ const StreamViewer = ({ channelName, streamData, onClose }) => {
           <button className={styles.actionButton}>
             <img src="/icons/chat/chat.png" alt="Chat" />
           </button>
+          {/* Spot Agent Button - только если требуются spot agents */}
+          {!isInitiator && spotAgentCount > 0 && assignedAgents.length < spotAgentCount && (
+            <button
+              className={`${styles.actionButton} ${hasApplied ? styles.spotAgentApplied : styles.spotAgentButton}`}
+              onClick={handleApplyAsSpotAgent}
+              disabled={spotAgentLoading || hasApplied}
+              title={hasApplied ? "Заявка подана" : "Стать Spot Agent"}
+            >
+              {hasApplied ? (
+                <span className={styles.spotAgentIcon}>✓</span>
+              ) : (
+                <span className={styles.spotAgentIcon}>🙋</span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 

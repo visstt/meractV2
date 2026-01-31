@@ -49,13 +49,16 @@ export function useSpotAgent(actId) {
     setLoading(true);
     setError(null);
     try {
-      console.log("Applying for actId:", actId);
-      const data = await spotAgentApi.apply(actId);
+      console.log("Applying for actId:", actId, "type:", typeof actId);
+      // Ensure actId is a number
+      const numericActId = typeof actId === 'string' ? parseInt(actId, 10) : actId;
+      const data = await spotAgentApi.apply(numericActId);
       console.log("Apply response:", data);
       await fetchCandidates();
       return data;
     } catch (err) {
       console.error("Error applying:", err);
+      console.error("Server response:", err.response?.data);
       const message = err.response?.data?.message || "Failed to apply";
       setError(message);
       throw new Error(message);

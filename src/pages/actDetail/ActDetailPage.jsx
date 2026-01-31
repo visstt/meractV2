@@ -18,7 +18,7 @@ export default function ActDetailPage() {
   const fetchAct = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/act/${id}`);
+      const response = await api.get(`/act/find-by-id/${id}`);
       setAct(response.data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load act");
