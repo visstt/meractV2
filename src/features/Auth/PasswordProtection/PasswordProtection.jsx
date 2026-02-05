@@ -26,7 +26,7 @@ const PasswordProtection = ({ children }) => {
       setError("");
       localStorage.setItem("sitePasswordAuth", "true");
     } else {
-      setError("Неверный пароль");
+      setError("Incorrect password");
       setPassword("");
     }
   };
@@ -56,7 +56,7 @@ const PasswordProtection = ({ children }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Пароль"
+                placeholder="Password"
                 className={styles.input}
                 autoFocus
               />
